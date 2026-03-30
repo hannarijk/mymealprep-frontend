@@ -1,0 +1,91 @@
+import { ref, computed } from 'vue'
+import { defineStore } from 'pinia'
+import { useRecipeStore } from '@/stores/recipeStore'
+import { fetchCurrentPlan, updatePlan } from '@/services/mealPlanService'
+import { getSuggestions } from '@/utils/mealPlanUtils'
+import type { CurrentPlan, Recipe } from '@/types'
+
+export const useMealPlanStore = defineStore('mealPlan', () => {
+  const recipeStore = useRecipeStore()
+
+  const currentPlan = ref<CurrentPlan>({ Breakfast: [], 'Lunch/Dinner': [] })
+  const planType = ref<'Weekly' | 'Biweekly'>('Weekly')
+  const isLoading = ref(false)
+  const error = ref<string | null>(null)
+
+  const breakfastRecipes = computed(() =>
+    currentPlan.value.Breakfast.map((id) => recipeStore.recipes.find((r) => r.id === id)).filter(
+      (r): r is Recipe => r !== undefined,
+    ),
+  )
+
+  const mainRecipes = computed(() =>
+    currentPlan.value['Lunch/Dinner']
+      .map((id) => recipeStore.recipes.find((r) => r.id === id))
+      .filter((r): r is Recipe => r !== undefined),
+  )
+
+  const suggestions = computed(() => {
+    const selectedIds = new Set([
+      ...currentPlan.value.Breakfast,
+      ...currentPlan.value['Lunch/Dinner'],
+    ])
+    return getSuggestions(recipeStore.recipes, selectedIds)
+  })
+
+  async function fetch() {
+    if (isLoading.value) return
+    isLoading.value = true
+    error.value = null
+    try {
+      currentPlan.value = await fetchCurrentPlan()
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Failed to load meal plan'
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  function addRecipe(recipeId: number, section: keyof CurrentPlan) {
+    if (currentPlan.value[section].includes(recipeId)) return
+    currentPlan.value[section].push(recipeId)
+    updatePlan(currentPlan.value).catch(() => {})
+  }
+
+  function removeRecipe(recipeId: number, section: keyof CurrentPlan) {
+    currentPlan.value[section] = currentPlan.value[section].filter((id) => id !== recipeId)
+    updatePlan(currentPlan.value).catch(() => {})
+  }
+
+  function togglePlanType() {
+    planType.value = planType.value === 'Weekly' ? 'Biweekly' : 'Weekly'
+  }
+
+  function clearPlan() {
+    currentPlan.value = { Breakfast: [], 'Lunch/Dinner': [] }
+    updatePlan(currentPlan.value).catch(() => {})
+  }
+
+  function reusePlan(plan: { recipeIds?: CurrentPlan }) {
+    currentPlan.value = structuredClone(
+      plan.recipeIds ?? { Breakfast: [], 'Lunch/Dinner': [] },
+    )
+    updatePlan(currentPlan.value).catch(() => {})
+  }
+
+  return {
+    currentPlan,
+    planType,
+    isLoading,
+    error,
+    breakfastRecipes,
+    mainRecipes,
+    suggestions,
+    fetch,
+    addRecipe,
+    removeRecipe,
+    togglePlanType,
+    clearPlan,
+    reusePlan,
+  }
+})
