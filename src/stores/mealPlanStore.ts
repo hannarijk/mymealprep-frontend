@@ -46,13 +46,13 @@ export const useMealPlanStore = defineStore('mealPlan', () => {
     }
   }
 
-  function addRecipe(recipeId: number, section: keyof CurrentPlan) {
+  function addRecipe(recipeId: string, section: keyof CurrentPlan) {
     if (currentPlan.value[section].includes(recipeId)) return
     currentPlan.value[section].push(recipeId)
     updatePlan(currentPlan.value).catch(() => {})
   }
 
-  function removeRecipe(recipeId: number, section: keyof CurrentPlan) {
+  function removeRecipe(recipeId: string, section: keyof CurrentPlan) {
     currentPlan.value[section] = currentPlan.value[section].filter((id) => id !== recipeId)
     updatePlan(currentPlan.value).catch(() => {})
   }
@@ -66,9 +66,9 @@ export const useMealPlanStore = defineStore('mealPlan', () => {
     updatePlan(currentPlan.value).catch(() => {})
   }
 
-  function reusePlan(plan: { recipeIds?: CurrentPlan }) {
+  function reusePlan(plan: { recipes?: CurrentPlan }) {
     currentPlan.value = structuredClone(
-      plan.recipeIds ?? { Breakfast: [], 'Lunch/Dinner': [] },
+      plan.recipes ?? { Breakfast: [], 'Lunch/Dinner': [] },
     )
     updatePlan(currentPlan.value).catch(() => {})
   }

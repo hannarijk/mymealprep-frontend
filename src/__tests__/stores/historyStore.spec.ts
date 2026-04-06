@@ -16,7 +16,7 @@ vi.mock('@/services/recipeService', () => ({
 
 import { fetchPlanHistory } from '@/services/mealPlanService'
 
-const makePlan = (id: number): MealPlan => ({
+const makePlan = (id: string): MealPlan => ({
   id,
   title: `Week ${id}`,
   type: 'Weekly',
@@ -24,7 +24,7 @@ const makePlan = (id: number): MealPlan => ({
   mains: 3,
   notes: '',
   reused: false,
-  recipeIds: { Breakfast: [id], 'Lunch/Dinner': [id + 10] },
+  recipes: { Breakfast: [id], 'Lunch/Dinner': [String(Number(id) + 10)] },
 })
 
 beforeEach(() => {
@@ -34,14 +34,14 @@ beforeEach(() => {
 
 describe('historyStore', () => {
   it('fetch populates history', async () => {
-    vi.mocked(fetchPlanHistory).mockResolvedValue([makePlan(1), makePlan(2), makePlan(3)])
+    vi.mocked(fetchPlanHistory).mockResolvedValue([makePlan('1'), makePlan('2'), makePlan('3')])
     const store = useHistoryStore()
     await store.fetch()
     expect(store.history).toHaveLength(3)
   })
 
   it('fetch is a no-op when history already loaded', async () => {
-    vi.mocked(fetchPlanHistory).mockResolvedValue([makePlan(1)])
+    vi.mocked(fetchPlanHistory).mockResolvedValue([makePlan('1')])
     const store = useHistoryStore()
     await store.fetch()
     await store.fetch()
@@ -57,7 +57,7 @@ describe('historyStore', () => {
 
   it('totalHistoryPages calculates correctly with 11 entries (pageSize=4)', () => {
     const store = useHistoryStore()
-    store.history = Array.from({ length: 11 }, (_, i) => makePlan(i + 1))
+    store.history = Array.from({ length: 11 }, (_, i) => makePlan(String(i + 1)))
     expect(store.totalHistoryPages).toBe(3)
   })
 
@@ -68,21 +68,21 @@ describe('historyStore', () => {
 
   it('pagedHistory returns correct slice for page 1', () => {
     const store = useHistoryStore()
-    store.history = Array.from({ length: 5 }, (_, i) => makePlan(i + 1))
+    store.history = Array.from({ length: 5 }, (_, i) => makePlan(String(i + 1)))
     store.historyPage = 1
     expect(store.pagedHistory).toHaveLength(4)
   })
 
   it('pagedHistory returns correct slice for last page', () => {
     const store = useHistoryStore()
-    store.history = Array.from({ length: 5 }, (_, i) => makePlan(i + 1))
+    store.history = Array.from({ length: 5 }, (_, i) => makePlan(String(i + 1)))
     store.historyPage = 2
     expect(store.pagedHistory).toHaveLength(1)
   })
 
   it('nextPage and prevPage are bounded', () => {
     const store = useHistoryStore()
-    store.history = Array.from({ length: 5 }, (_, i) => makePlan(i + 1))
+    store.history = Array.from({ length: 5 }, (_, i) => makePlan(String(i + 1)))
     store.nextPage()
     store.nextPage()
     store.nextPage()
@@ -93,12 +93,12 @@ describe('historyStore', () => {
     expect(store.historyPage).toBe(1)
   })
 
-  it('reusePlan sets mealPlanStore.currentPlan to plan.recipeIds', () => {
+  it('reusePlan sets mealPlanStore.currentPlan to plan.recipes', () => {
     const store = useHistoryStore()
     const mealPlanStore = useMealPlanStore()
-    const plan = makePlan(5)
+    const plan = makePlan('5')
     store.reusePlan(plan)
-    expect(mealPlanStore.currentPlan.Breakfast).toEqual([5])
-    expect(mealPlanStore.currentPlan['Lunch/Dinner']).toEqual([15])
+    expect(mealPlanStore.currentPlan.Breakfast).toEqual(['5'])
+    expect(mealPlanStore.currentPlan['Lunch/Dinner']).toEqual(['15'])
   })
 })

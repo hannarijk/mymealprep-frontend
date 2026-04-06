@@ -3,7 +3,7 @@ import { GripVertical, Clock3, Users, Trash2 } from 'lucide-vue-next'
 import type { Recipe } from '@/types'
 
 const props = defineProps<{ recipe: Recipe }>()
-const emit = defineEmits<{ remove: [id: number]; view: [id: number] }>()
+const emit = defineEmits<{ remove: [id: string]; view: [id: string] }>()
 </script>
 
 <template>

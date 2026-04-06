@@ -18,7 +18,7 @@ beforeEach(() => {
 describe('groceryStore', () => {
   it('fetch populates grocery groups', async () => {
     const mock: GroceryGroup = {
-      Produce: [{ name: 'Spinach', amount: '300g', checked: false }],
+      Produce: [{ id: 'p-1', name: 'Spinach', amount: '300g', checked: false }],
     }
     vi.mocked(fetchGrocery).mockResolvedValue(mock)
     const store = useGroceryStore()
@@ -43,7 +43,7 @@ describe('groceryStore', () => {
 
   it('toggleItem flips checked state', () => {
     const store = useGroceryStore()
-    store.grocery = { Produce: [{ name: 'Spinach', amount: '300g', checked: false }] }
+    store.grocery = { Produce: [{ id: 'p-1', name: 'Spinach', amount: '300g', checked: false }] }
     store.toggleItem('Produce', 0)
     expect(store.grocery['Produce']?.[0]?.checked).toBe(true)
     store.toggleItem('Produce', 0)
@@ -66,8 +66,8 @@ describe('groceryStore', () => {
     const store = useGroceryStore()
     store.grocery = {
       Produce: [
-        { name: 'Spinach', amount: '', checked: false },
-        { name: 'Kale', amount: '', checked: false },
+        { id: 'p-1', name: 'Spinach', amount: '', checked: false },
+        { id: 'p-2', name: 'Kale', amount: '', checked: false },
       ],
     }
     store.removeItem('Produce', 0)
@@ -81,20 +81,20 @@ describe('groceryStore', () => {
     store.addItem('Pantry', 'Olive oil')
     const items = store.grocery['Pantry']
     expect(items).toHaveLength(1)
-    expect(items?.[0]).toEqual({ name: 'Olive oil', amount: '', checked: false })
+    expect(items?.[0]).toEqual({ id: '', name: 'Olive oil', amount: '', checked: false })
   })
 
   it('totalItems sums items across all departments', () => {
     const store = useGroceryStore()
     store.grocery = {
       Produce: [
-        { name: 'Spinach', amount: '', checked: false },
-        { name: 'Kale', amount: '', checked: false },
+        { id: 'p-1', name: 'Spinach', amount: '', checked: false },
+        { id: 'p-2', name: 'Kale', amount: '', checked: false },
       ],
       Dairy: [
-        { name: 'Eggs', amount: '', checked: false },
-        { name: 'Milk', amount: '', checked: false },
-        { name: 'Cheese', amount: '', checked: false },
+        { id: 'd-1', name: 'Eggs', amount: '', checked: false },
+        { id: 'd-2', name: 'Milk', amount: '', checked: false },
+        { id: 'd-3', name: 'Cheese', amount: '', checked: false },
       ],
     }
     expect(store.totalItems).toBe(5)

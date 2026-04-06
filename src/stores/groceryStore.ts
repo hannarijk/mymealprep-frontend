@@ -44,7 +44,7 @@ export const useGroceryStore = defineStore('grocery', () => {
 
   function addItem(department: string, name: string) {
     const items = grocery.value[department] ?? []
-    grocery.value[department] = [...items, { name, amount: '', checked: false }]
+    grocery.value[department] = [...items, { id: '', name, amount: '', checked: false }]
     updateGrocery(grocery.value).catch(() => {})
   }
 

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { getSuggestions } from '@/utils/mealPlanUtils'
 import type { Recipe } from '@/types'
 
-const makeRecipe = (id: number): Recipe => ({
+const makeRecipe = (id: string): Recipe => ({
   id,
   name: `Recipe ${id}`,
   tags: [],
@@ -18,11 +18,11 @@ const makeRecipe = (id: number): Recipe => ({
 })
 
 describe('getSuggestions', () => {
-  const recipes = [1, 2, 3, 4, 5].map(makeRecipe)
+  const recipes = ['1', '2', '3', '4', '5'].map(makeRecipe)
 
   it('excludes recipes in selectedIds', () => {
-    const result = getSuggestions(recipes, new Set([1, 2]))
-    expect(result.map((r) => r.id)).toEqual([3, 4, 5])
+    const result = getSuggestions(recipes, new Set(['1', '2']))
+    expect(result.map((r) => r.id)).toEqual(['3', '4', '5'])
   })
 
   it('returns all when selectedIds is empty', () => {
@@ -30,7 +30,7 @@ describe('getSuggestions', () => {
   })
 
   it('returns empty array when all recipes are selected', () => {
-    expect(getSuggestions(recipes, new Set([1, 2, 3, 4, 5]))).toHaveLength(0)
+    expect(getSuggestions(recipes, new Set(['1', '2', '3', '4', '5']))).toHaveLength(0)
   })
 
   it('respects the limit', () => {

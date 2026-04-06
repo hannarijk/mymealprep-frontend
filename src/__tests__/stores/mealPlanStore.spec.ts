@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useMealPlanStore } from '@/stores/mealPlanStore'
 import { useRecipeStore } from '@/stores/recipeStore'
-import type { Recipe, CurrentPlan } from '@/types'
+import type { Recipe } from '@/types'
 
 vi.mock('@/services/mealPlanService', () => ({
   fetchCurrentPlan: vi.fn(),
@@ -16,7 +16,7 @@ vi.mock('@/services/recipeService', () => ({
 
 import { fetchCurrentPlan } from '@/services/mealPlanService'
 
-const makeRecipe = (id: number): Recipe => ({
+const makeRecipe = (id: string): Recipe => ({
   id,
   name: `Recipe ${id}`,
   tags: [],
@@ -31,7 +31,7 @@ const makeRecipe = (id: number): Recipe => ({
   steps: [],
 })
 
-function seedRecipes(ids: number[]) {
+function seedRecipes(ids: string[]) {
   const recipeStore = useRecipeStore()
   recipeStore.recipes = ids.map(makeRecipe)
 }
@@ -43,11 +43,11 @@ beforeEach(() => {
 
 describe('mealPlanStore', () => {
   it('fetch sets currentPlan from service', async () => {
-    vi.mocked(fetchCurrentPlan).mockResolvedValue({ Breakfast: [1], 'Lunch/Dinner': [4] })
+    vi.mocked(fetchCurrentPlan).mockResolvedValue({ Breakfast: ['1'], 'Lunch/Dinner': ['4'] })
     const store = useMealPlanStore()
     await store.fetch()
-    expect(store.currentPlan.Breakfast).toEqual([1])
-    expect(store.currentPlan['Lunch/Dinner']).toEqual([4])
+    expect(store.currentPlan.Breakfast).toEqual(['1'])
+    expect(store.currentPlan['Lunch/Dinner']).toEqual(['4'])
   })
 
   it('sets error on fetch failure', async () => {
@@ -59,28 +59,28 @@ describe('mealPlanStore', () => {
 
   it('addRecipe adds id to correct section', () => {
     const store = useMealPlanStore()
-    store.addRecipe(1, 'Breakfast')
-    expect(store.currentPlan.Breakfast).toContain(1)
+    store.addRecipe('1', 'Breakfast')
+    expect(store.currentPlan.Breakfast).toContain('1')
   })
 
   it('addRecipe is idempotent', () => {
     const store = useMealPlanStore()
-    store.addRecipe(1, 'Breakfast')
-    store.addRecipe(1, 'Breakfast')
-    expect(store.currentPlan.Breakfast.filter((id) => id === 1)).toHaveLength(1)
+    store.addRecipe('1', 'Breakfast')
+    store.addRecipe('1', 'Breakfast')
+    expect(store.currentPlan.Breakfast.filter((id) => id === '1')).toHaveLength(1)
   })
 
   it('removeRecipe removes the correct id', () => {
     const store = useMealPlanStore()
-    store.currentPlan.Breakfast = [1, 2]
-    store.removeRecipe(1, 'Breakfast')
-    expect(store.currentPlan.Breakfast).toEqual([2])
+    store.currentPlan.Breakfast = ['1', '2']
+    store.removeRecipe('1', 'Breakfast')
+    expect(store.currentPlan.Breakfast).toEqual(['2'])
   })
 
   it('clearPlan empties both sections', () => {
     const store = useMealPlanStore()
-    store.currentPlan.Breakfast = [1, 2]
-    store.currentPlan['Lunch/Dinner'] = [3, 4]
+    store.currentPlan.Breakfast = ['1', '2']
+    store.currentPlan['Lunch/Dinner'] = ['3', '4']
     store.clearPlan()
     expect(store.currentPlan.Breakfast).toHaveLength(0)
     expect(store.currentPlan['Lunch/Dinner']).toHaveLength(0)
@@ -96,26 +96,26 @@ describe('mealPlanStore', () => {
   })
 
   it('suggestions excludes already-selected recipe ids', () => {
-    seedRecipes([1, 2, 3, 4])
+    seedRecipes(['1', '2', '3', '4'])
     const store = useMealPlanStore()
-    store.currentPlan.Breakfast = [1]
-    store.currentPlan['Lunch/Dinner'] = [2]
+    store.currentPlan.Breakfast = ['1']
+    store.currentPlan['Lunch/Dinner'] = ['2']
     const ids = store.suggestions.map((r) => r.id)
-    expect(ids).not.toContain(1)
-    expect(ids).not.toContain(2)
-    expect(ids).toContain(3)
-    expect(ids).toContain(4)
+    expect(ids).not.toContain('1')
+    expect(ids).not.toContain('2')
+    expect(ids).toContain('3')
+    expect(ids).toContain('4')
   })
 
-  it('reusePlan sets currentPlan from recipeIds', () => {
+  it('reusePlan sets currentPlan from plan.recipes', () => {
     const store = useMealPlanStore()
     const plan = {
-      id: 1, title: 'Old Plan', type: 'Weekly' as const,
+      id: '1', title: 'Old Plan', type: 'Weekly' as const,
       breakfasts: 2, mains: 2, notes: '', reused: false,
-      recipeIds: { Breakfast: [9, 1], 'Lunch/Dinner': [14, 5] },
+      recipes: { Breakfast: ['9', '1'], 'Lunch/Dinner': ['14', '5'] },
     }
     store.reusePlan(plan)
-    expect(store.currentPlan.Breakfast).toEqual([9, 1])
-    expect(store.currentPlan['Lunch/Dinner']).toEqual([14, 5])
+    expect(store.currentPlan.Breakfast).toEqual(['9', '1'])
+    expect(store.currentPlan['Lunch/Dinner']).toEqual(['14', '5'])
   })
 })

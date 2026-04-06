@@ -9,7 +9,7 @@ vi.mock('@/services/recipeService', () => ({
 
 import { fetchRecipes } from '@/services/recipeService'
 
-const makeRecipe = (id: number, name = `Recipe ${id}`): Recipe => ({
+const makeRecipe = (id: string, name = `Recipe ${id}`): Recipe => ({
   id,
   name,
   tags: ['quick'],
@@ -31,14 +31,14 @@ beforeEach(() => {
 
 describe('recipeStore', () => {
   it('fetch populates recipes', async () => {
-    vi.mocked(fetchRecipes).mockResolvedValue([makeRecipe(1), makeRecipe(2)])
+    vi.mocked(fetchRecipes).mockResolvedValue([makeRecipe('1'), makeRecipe('2')])
     const store = useRecipeStore()
     await store.fetch()
     expect(store.recipes).toHaveLength(2)
   })
 
   it('fetch is a no-op when recipes already loaded', async () => {
-    vi.mocked(fetchRecipes).mockResolvedValue([makeRecipe(1)])
+    vi.mocked(fetchRecipes).mockResolvedValue([makeRecipe('1')])
     const store = useRecipeStore()
     await store.fetch()
     await store.fetch()
@@ -54,16 +54,16 @@ describe('recipeStore', () => {
   })
 
   it('setSearch filters filteredRecipes', async () => {
-    vi.mocked(fetchRecipes).mockResolvedValue([makeRecipe(1, 'Oatmeal'), makeRecipe(2, 'Lentil Soup')])
+    vi.mocked(fetchRecipes).mockResolvedValue([makeRecipe('1', 'Oatmeal'), makeRecipe('2', 'Lentil Soup')])
     const store = useRecipeStore()
     await store.fetch()
     store.setSearch('oat')
     expect(store.filteredRecipes).toHaveLength(1)
-    expect(store.filteredRecipes[0]?.id).toBe(1)
+    expect(store.filteredRecipes[0]?.id).toBe('1')
   })
 
   it('setSearch resets recipePage to 1', async () => {
-    vi.mocked(fetchRecipes).mockResolvedValue(Array.from({ length: 20 }, (_, i) => makeRecipe(i + 1)))
+    vi.mocked(fetchRecipes).mockResolvedValue(Array.from({ length: 20 }, (_, i) => makeRecipe(String(i + 1))))
     const store = useRecipeStore()
     await store.fetch()
     store.nextPage()
@@ -78,7 +78,7 @@ describe('recipeStore', () => {
   })
 
   it('nextPage does not exceed totalRecipePages', async () => {
-    vi.mocked(fetchRecipes).mockResolvedValue(Array.from({ length: 9 }, (_, i) => makeRecipe(i + 1)))
+    vi.mocked(fetchRecipes).mockResolvedValue(Array.from({ length: 9 }, (_, i) => makeRecipe(String(i + 1))))
     const store = useRecipeStore()
     await store.fetch()
     store.nextPage()

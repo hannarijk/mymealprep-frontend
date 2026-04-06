@@ -4,8 +4,8 @@ import type { Recipe } from '@/types'
 
 const props = defineProps<{ recipe: Recipe }>()
 const emit = defineEmits<{
-  add: [payload: { recipeId: number; section: 'Breakfast' | 'Lunch/Dinner' }]
-  view: [id: number]
+  add: [payload: { recipeId: string; section: 'Breakfast' | 'Lunch/Dinner' }]
+  view: [id: string]
 }>()
 </script>
 

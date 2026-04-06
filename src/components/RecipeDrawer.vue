@@ -147,7 +147,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
                   class="flex items-center gap-2.5 text-sm text-slate-700"
                 >
                   <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
-                  {{ ingredient }}
+                  {{ ingredient.name }}
                 </li>
               </ul>
             </div>

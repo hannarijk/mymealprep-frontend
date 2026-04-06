@@ -1,5 +1,12 @@
+export interface Ingredient {
+  id: string
+  name: string
+  amount: string
+  department: string
+}
+
 export interface Recipe {
-  id: number
+  id: string
   name: string
   tags: string[]
   timeMinutes: number
@@ -9,25 +16,27 @@ export interface Recipe {
   imageUrl: string
   section: 'Breakfast' | 'Lunch/Dinner'
   why: string
-  ingredients: string[]
+  ingredients: Ingredient[]
   steps: string[]
 }
 
 export interface GroceryItem {
+  id: string
   name: string
   amount: string
   checked: boolean
+  manual?: boolean
 }
 
 export type GroceryGroup = Record<string, GroceryItem[]>
 
 export interface CurrentPlan {
-  Breakfast: number[]
-  'Lunch/Dinner': number[]
+  Breakfast: string[]
+  'Lunch/Dinner': string[]
 }
 
 export interface MealPlan {
-  id: number
+  id: string
   title: string
   type: 'Weekly' | 'Biweekly'
   breakfasts: number
@@ -35,5 +44,5 @@ export interface MealPlan {
   notes: string
   reused: boolean
   active?: boolean
-  recipeIds?: CurrentPlan
+  recipes?: CurrentPlan
 }

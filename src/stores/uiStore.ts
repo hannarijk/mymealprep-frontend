@@ -3,13 +3,13 @@ import { defineStore } from 'pinia'
 
 export const useUIStore = defineStore('ui', () => {
   const showSuggestions = ref(true)
-  const selectedRecipeId = ref<number | null>(null)
+  const selectedRecipeId = ref<string | null>(null)
 
   function toggleSuggestions() {
     showSuggestions.value = !showSuggestions.value
   }
 
-  function openRecipe(id: number) {
+  function openRecipe(id: string) {
     selectedRecipeId.value = id
   }
 
