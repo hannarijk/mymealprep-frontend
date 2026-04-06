@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useRecipeStore } from '@/stores/recipeStore'
+import { ApiError } from '@/api/client'
 import type { Recipe } from '@/types'
 
 vi.mock('@/services/recipeService', () => ({
@@ -91,5 +92,13 @@ describe('recipeStore', () => {
     const store = useRecipeStore()
     store.prevPage()
     expect(store.recipePage).toBe(1)
+  })
+
+  it('sets error message when service throws ApiError', async () => {
+    vi.mocked(fetchRecipes).mockRejectedValue(new ApiError(500, 'Internal Server Error'))
+    const store = useRecipeStore()
+    await store.fetch()
+    expect(store.error).toBe('Internal Server Error')
+    expect(store.recipes).toHaveLength(0)
   })
 })
