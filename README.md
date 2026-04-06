@@ -63,18 +63,30 @@ The Vite dev server proxies all `/api/v1/*` requests to the backend on `http://l
 | `npm run lint` | Lint with Oxlint + ESLint (auto-fix) |
 | `npm run format` | Format with Prettier |
 
+## Authentication
+
+The app uses JWT-based authentication. Tokens are stored in `localStorage` and automatically attached to every API request.
+
+1. **Register** at `/register` — creates an account and logs you in
+2. **Login** at `/login` — authenticates and redirects to `/plan`
+3. **Token lifetime** — 7 days; the app redirects to `/login` automatically on expiry
+4. **Logout** — clears the token from `localStorage` and returns to `/login`
+
+All routes except `/login` and `/register` require authentication. Unauthenticated requests to protected routes are redirected to `/login?redirect=<path>` and the original destination is restored after login.
+
 ## Project Structure
 
 ```
 src/
+├── api/           # HTTP client, API types, and mapper layer
 ├── components/    # Shared UI components
-├── views/         # Route-level page components
+├── views/         # Route-level page components (incl. LoginView, RegisterView)
 ├── stores/        # Pinia stores (state + actions)
-├── services/      # API service layer (currently mocked)
+├── services/      # Data service layer
 ├── mocks/         # Dev-only data fixtures
 ├── utils/         # Pure business logic (no framework dependencies)
 ├── types/         # Shared TypeScript interfaces
-└── router/        # Vue Router configuration
+└── router/        # Vue Router configuration + auth guards
 ```
 
 ## Architecture
@@ -82,11 +94,11 @@ src/
 Each layer imports only from layers below it:
 
 ```
-Views / Components  →  Stores  →  Services  →  Types
+Views / Components  →  Stores  →  Services  →  API client  →  Backend
                               ↘  Utils     ↗
 ```
 
-**Connecting to a real API:** All data fetching is isolated in `src/services/`. Replace the mock function bodies with real HTTP calls — no store or component changes required. Delete `src/mocks/` when the real API is connected.
+The `src/api/` layer handles the HTTP contract with the backend: typed `fetch` wrapper (`client.ts`), raw API response types (`types.ts`), and mapper functions that convert backend shapes to UI types (`mappers/`).
 
 ## Testing
 
