@@ -15,7 +15,7 @@ const emit = defineEmits<{
     @click="emit('view', recipe.id)"
   >
     <img
-      :src="recipe.image"
+      :src="recipe.imageUrl"
       :alt="recipe.name"
       class="h-9 w-full rounded-t-2xl object-cover"
     />
@@ -35,7 +35,7 @@ const emit = defineEmits<{
         >{{ tag }}</span>
       </div>
       <div class="mt-2 flex items-center gap-3 text-xs text-slate-400">
-        <span class="flex items-center gap-1"><Clock3 class="h-3.5 w-3.5" />{{ recipe.time }}m</span>
+        <span class="flex items-center gap-1"><Clock3 class="h-3.5 w-3.5" />{{ recipe.timeMinutes }}m</span>
         <span class="flex items-center gap-1"><Users class="h-3.5 w-3.5" />{{ recipe.servings }}</span>
       </div>
       <div class="mt-3 flex gap-2" @click.stop>

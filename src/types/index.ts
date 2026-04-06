@@ -2,11 +2,11 @@ export interface Recipe {
   id: number
   name: string
   tags: string[]
-  time: number
+  timeMinutes: number
   servings: number
   liked: boolean
   usedWeeksAgo: number | null
-  image: string
+  imageUrl: string
   section: 'Breakfast' | 'Lunch/Dinner'
   why: string
   ingredients: string[]

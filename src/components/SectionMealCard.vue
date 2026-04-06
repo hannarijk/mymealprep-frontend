@@ -13,7 +13,7 @@ const emit = defineEmits<{ remove: [id: number]; view: [id: number] }>()
   >
     <GripVertical class="h-4 w-4 shrink-0 text-slate-300" />
     <img
-      :src="recipe.image"
+      :src="recipe.imageUrl"
       :alt="recipe.name"
       class="h-14 w-14 shrink-0 rounded-xl object-cover"
     />
@@ -29,7 +29,7 @@ const emit = defineEmits<{ remove: [id: number]; view: [id: number] }>()
     </div>
     <div class="hidden shrink-0 items-center gap-3 sm:flex">
       <span class="flex items-center gap-1 text-xs text-slate-400">
-        <Clock3 class="h-3.5 w-3.5" />{{ recipe.time }}m
+        <Clock3 class="h-3.5 w-3.5" />{{ recipe.timeMinutes }}m
       </span>
       <span class="flex items-center gap-1 text-xs text-slate-400">
         <Users class="h-3.5 w-3.5" />{{ recipe.servings }}

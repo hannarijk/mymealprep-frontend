@@ -13,7 +13,7 @@ const emit = defineEmits<{
   <div class="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
     <div class="relative">
       <img
-        :src="recipe.image"
+        :src="recipe.imageUrl"
         :alt="recipe.name"
         class="h-44 w-full object-cover"
       />
@@ -33,7 +33,7 @@ const emit = defineEmits<{
         >{{ tag }}</span>
       </div>
       <div class="mt-3 flex items-center gap-3 text-xs text-slate-400">
-        <span class="flex items-center gap-1"><Clock3 class="h-3.5 w-3.5" />{{ recipe.time }}m</span>
+        <span class="flex items-center gap-1"><Clock3 class="h-3.5 w-3.5" />{{ recipe.timeMinutes }}m</span>
         <span class="flex items-center gap-1"><Users class="h-3.5 w-3.5" />{{ recipe.servings }} servings</span>
       </div>
       <div class="mt-auto flex gap-2 pt-4">

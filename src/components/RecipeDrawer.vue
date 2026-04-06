@@ -65,7 +65,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
         <div class="flex-1 overflow-y-auto">
           <!-- Hero image -->
           <img
-            :src="recipe.image"
+            :src="recipe.imageUrl"
             :alt="recipe.name"
             class="h-60 w-full object-cover"
           />
@@ -86,7 +86,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
             <!-- Meta -->
             <div class="mt-3 flex flex-wrap gap-2">
               <span class="flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
-                <Clock3 class="h-3.5 w-3.5" />{{ recipe.time }} min
+                <Clock3 class="h-3.5 w-3.5" />{{ recipe.timeMinutes }} min
               </span>
               <span class="flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
                 <Users class="h-3.5 w-3.5" />{{ recipe.servings }} servings
