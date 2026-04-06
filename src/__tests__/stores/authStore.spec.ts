@@ -92,6 +92,20 @@ describe('authStore', () => {
     expect(store.error).toBe('Email already exists')
   })
 
+  it('getMe populates user from /auth/me', async () => {
+    vi.mocked(client.get).mockResolvedValue({ id: 'user-1', email: 'test@example.com' })
+    const store = useAuthStore()
+    await store.getMe()
+    expect(store.user).toEqual({ id: 'user-1', email: 'test@example.com' })
+  })
+
+  it('getMe silently ignores errors (401 handled globally)', async () => {
+    vi.mocked(client.get).mockRejectedValue(new ApiError(401, 'Unauthorized'))
+    const store = useAuthStore()
+    await expect(store.getMe()).resolves.not.toThrow()
+    expect(store.user).toBeNull()
+  })
+
   it('logout clears token, user, and localStorage', async () => {
     vi.mocked(client.post).mockResolvedValue(mockAuthResponse)
     const store = useAuthStore()

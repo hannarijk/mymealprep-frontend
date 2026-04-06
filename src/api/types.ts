@@ -78,3 +78,8 @@ export interface ApiAuthResponse {
     email: string
   }
 }
+
+export interface ApiUserResponse {
+  id: string
+  email: string
+}

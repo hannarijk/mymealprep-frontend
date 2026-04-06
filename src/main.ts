@@ -20,4 +20,8 @@ setUnauthorizedHandler(() => {
   router.push('/login')
 })
 
+if (authStore.token) {
+  authStore.getMe()
+}
+
 app.mount('#app')

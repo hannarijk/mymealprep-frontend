@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { client } from '@/api/client'
-import type { ApiAuthResponse } from '@/api/types'
+import type { ApiAuthResponse, ApiUserResponse } from '@/api/types'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('auth_token'))
@@ -38,6 +38,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function getMe() {
+    try {
+      const response = await client.get<ApiUserResponse>('/auth/me')
+      user.value = response
+    } catch {
+      // 401 is handled by the global unauthorized handler in main.ts
+    }
+  }
+
   function logout() {
     token.value = null
     user.value = null
@@ -45,5 +54,5 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('auth_token')
   }
 
-  return { token, user, error, isAuthenticated, login, register, logout }
+  return { token, user, error, isAuthenticated, login, register, getMe, logout }
 })
