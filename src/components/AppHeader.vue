@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-import { CalendarRange, BookOpen, ShoppingCart, History, PanelRightOpen, PanelRightClose } from 'lucide-vue-next'
+import { useRoute, useRouter } from 'vue-router'
+import { CalendarRange, BookOpen, ShoppingCart, History, PanelRightOpen, PanelRightClose, LogOut } from 'lucide-vue-next'
 import { useMealPlanStore } from '@/stores/mealPlanStore'
 import { useUIStore } from '@/stores/uiStore'
+import { useAuthStore } from '@/stores/authStore'
 import Pill from '@/components/Pill.vue'
 
 const route = useRoute()
+const router = useRouter()
 const mealPlanStore = useMealPlanStore()
 const uiStore = useUIStore()
+const authStore = useAuthStore()
 
 const tabs = [
   { path: '/plan', label: 'Plan', icon: CalendarRange },
@@ -18,6 +21,14 @@ const tabs = [
 ]
 
 const isOnPlan = computed(() => route.path === '/plan')
+const avatarInitials = computed(() =>
+  authStore.user?.email.slice(0, 2).toUpperCase() ?? '?',
+)
+
+function logout() {
+  authStore.logout()
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -76,9 +87,19 @@ const isOnPlan = computed(() => route.path === '/plan')
         <div
           class="flex h-8 w-8 items-center justify-center rounded-xl text-xs font-semibold text-white"
           style="background: radial-gradient(circle at 30% 30%, #6366f1, #312e81)"
+          :title="authStore.user?.email"
         >
-          AP
+          {{ avatarInitials }}
         </div>
+
+        <!-- Logout -->
+        <button
+          class="rounded-xl border border-slate-200 p-1.5 text-slate-500 transition hover:bg-rose-50 hover:border-rose-200 hover:text-rose-500"
+          title="Log out"
+          @click="logout"
+        >
+          <LogOut class="h-4 w-4" />
+        </button>
       </div>
     </div>
 
