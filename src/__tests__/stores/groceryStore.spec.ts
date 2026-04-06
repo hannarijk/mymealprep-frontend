@@ -5,10 +5,12 @@ import type { GroceryGroup } from '@/types'
 
 vi.mock('@/services/groceryService', () => ({
   fetchGrocery: vi.fn(),
-  updateGrocery: vi.fn().mockResolvedValue(undefined),
+  toggleGroceryItem: vi.fn().mockResolvedValue(undefined),
+  removeGroceryItem: vi.fn().mockResolvedValue(undefined),
+  addGroceryItem: vi.fn(),
 }))
 
-import { fetchGrocery } from '@/services/groceryService'
+import { fetchGrocery, toggleGroceryItem, removeGroceryItem, addGroceryItem } from '@/services/groceryService'
 
 beforeEach(() => {
   setActivePinia(createPinia())
@@ -41,28 +43,35 @@ describe('groceryStore', () => {
     expect(store.error).toBe('Network error')
   })
 
-  it('toggleItem flips checked state', () => {
+  it('toggleItem flips checked and calls toggleGroceryItem', async () => {
     const store = useGroceryStore()
     store.grocery = { Produce: [{ id: 'p-1', name: 'Spinach', amount: '300g', checked: false }] }
-    store.toggleItem('Produce', 0)
+    await store.toggleItem('Produce', 0)
     expect(store.grocery['Produce']?.[0]?.checked).toBe(true)
-    store.toggleItem('Produce', 0)
+    expect(toggleGroceryItem).toHaveBeenCalledWith('p-1', true)
+  })
+
+  it('toggleItem reverts on service failure', async () => {
+    vi.mocked(toggleGroceryItem).mockRejectedValueOnce(new Error('Network error'))
+    const store = useGroceryStore()
+    store.grocery = { Produce: [{ id: 'p-1', name: 'Spinach', amount: '', checked: false }] }
+    await store.toggleItem('Produce', 0)
     expect(store.grocery['Produce']?.[0]?.checked).toBe(false)
   })
 
-  it('toggleItem does nothing for out-of-bounds index', () => {
+  it('toggleItem does nothing for out-of-bounds index', async () => {
     const store = useGroceryStore()
     store.grocery = { Produce: [] }
-    expect(() => store.toggleItem('Produce', 99)).not.toThrow()
+    await expect(store.toggleItem('Produce', 99)).resolves.not.toThrow()
   })
 
-  it('toggleItem does nothing for unknown department', () => {
+  it('toggleItem does nothing for unknown department', async () => {
     const store = useGroceryStore()
     store.grocery = {}
-    expect(() => store.toggleItem('Unknown', 0)).not.toThrow()
+    await expect(store.toggleItem('Unknown', 0)).resolves.not.toThrow()
   })
 
-  it('removeItem removes the item at the given index', () => {
+  it('removeItem removes item and calls removeGroceryItem', async () => {
     const store = useGroceryStore()
     store.grocery = {
       Produce: [
@@ -70,18 +79,30 @@ describe('groceryStore', () => {
         { id: 'p-2', name: 'Kale', amount: '', checked: false },
       ],
     }
-    store.removeItem('Produce', 0)
+    await store.removeItem('Produce', 0)
     expect(store.grocery['Produce']).toHaveLength(1)
     expect(store.grocery['Produce']?.[0]?.name).toBe('Kale')
+    expect(removeGroceryItem).toHaveBeenCalledWith('p-1')
   })
 
-  it('addItem appends a new unchecked item', () => {
+  it('removeItem restores item on service failure', async () => {
+    vi.mocked(removeGroceryItem).mockRejectedValueOnce(new Error('Network error'))
+    const store = useGroceryStore()
+    store.grocery = {
+      Produce: [{ id: 'p-1', name: 'Spinach', amount: '', checked: false }],
+    }
+    await store.removeItem('Produce', 0)
+    expect(store.grocery['Produce']).toHaveLength(1)
+  })
+
+  it('addItem appends item returned by service with server UUID', async () => {
+    vi.mocked(addGroceryItem).mockResolvedValue({ id: 'server-uuid', name: 'Olive oil', amount: '', checked: false })
     const store = useGroceryStore()
     store.grocery = { Pantry: [] }
-    store.addItem('Pantry', 'Olive oil')
-    const items = store.grocery['Pantry']
-    expect(items).toHaveLength(1)
-    expect(items?.[0]).toEqual({ id: '', name: 'Olive oil', amount: '', checked: false })
+    await store.addItem('Pantry', 'Olive oil')
+    expect(addGroceryItem).toHaveBeenCalledWith('Olive oil', '', 'Pantry')
+    expect(store.grocery['Pantry']?.[0]?.id).toBe('server-uuid')
+    expect(store.grocery['Pantry']?.[0]?.name).toBe('Olive oil')
   })
 
   it('invalidate resets grocery state and allows fetch to run again', async () => {
