@@ -22,12 +22,33 @@ A weekly meal planning app for organizing breakfast and lunch/dinner recipes, ge
 
 ## Getting Started
 
-**Prerequisites:** Node.js 18+, npm 9+
+**Prerequisites:** Node.js 18+, npm 9+, Docker (for the backend)
 
 ```sh
+# 1. Start the backend (from the mymealprep-backend directory)
+docker compose up
+
+# 2. Set up environment variables
+cp .env.example .env
+
+# 3. Install dependencies and start the dev server
 npm install
 npm run dev        # http://localhost:5173
 ```
+
+## Environment Setup
+
+Copy `.env.example` to `.env` before running the dev server:
+
+```sh
+cp .env.example .env
+```
+
+| Variable | Default | Description |
+|---|---|---|
+| `VITE_API_BASE_URL` | `/api/v1` | API base path. The dev server proxies this to `http://localhost:8080`. |
+
+The Vite dev server proxies all `/api/v1/*` requests to the backend on `http://localhost:8080`, so no CORS configuration is needed in development.
 
 ## Scripts
 
