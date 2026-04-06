@@ -84,6 +84,17 @@ describe('groceryStore', () => {
     expect(items?.[0]).toEqual({ id: '', name: 'Olive oil', amount: '', checked: false })
   })
 
+  it('invalidate resets grocery state and allows fetch to run again', async () => {
+    vi.mocked(fetchGrocery).mockResolvedValue({ Produce: [{ id: 'p-1', name: 'Spinach', amount: '', checked: false }] })
+    const store = useGroceryStore()
+    await store.fetch()
+    expect(fetchGrocery).toHaveBeenCalledTimes(1)
+    store.invalidate()
+    await store.fetch()
+    expect(fetchGrocery).toHaveBeenCalledTimes(2)
+    expect(store.departments).toContain('Produce')
+  })
+
   it('totalItems sums items across all departments', () => {
     const store = useGroceryStore()
     store.grocery = {

@@ -14,7 +14,12 @@ vi.mock('@/services/recipeService', () => ({
   fetchRecipes: vi.fn(),
 }))
 
-import { fetchCurrentPlan } from '@/services/mealPlanService'
+vi.mock('@/stores/groceryStore', () => ({
+  useGroceryStore: vi.fn(() => ({ invalidate: vi.fn() })),
+}))
+
+import { fetchCurrentPlan, updatePlan } from '@/services/mealPlanService'
+import { useGroceryStore } from '@/stores/groceryStore'
 
 const makeRecipe = (id: string): Recipe => ({
   id,
@@ -93,6 +98,29 @@ describe('mealPlanStore', () => {
     expect(store.planType).toBe('Biweekly')
     store.togglePlanType()
     expect(store.planType).toBe('Weekly')
+  })
+
+  it('togglePlanType calls updatePlan with new type', () => {
+    const store = useMealPlanStore()
+    store.togglePlanType()
+    expect(updatePlan).toHaveBeenCalledWith(store.currentPlan, { type: 'Biweekly' })
+  })
+
+  it('addRecipe calls groceryStore.invalidate', () => {
+    const invalidate = vi.fn()
+    vi.mocked(useGroceryStore).mockReturnValue({ invalidate } as ReturnType<typeof useGroceryStore>)
+    const store = useMealPlanStore()
+    store.addRecipe('1', 'Breakfast')
+    expect(invalidate).toHaveBeenCalled()
+  })
+
+  it('removeRecipe calls groceryStore.invalidate', () => {
+    const invalidate = vi.fn()
+    vi.mocked(useGroceryStore).mockReturnValue({ invalidate } as ReturnType<typeof useGroceryStore>)
+    const store = useMealPlanStore()
+    store.currentPlan.Breakfast = ['1']
+    store.removeRecipe('1', 'Breakfast')
+    expect(invalidate).toHaveBeenCalled()
   })
 
   it('suggestions excludes already-selected recipe ids', () => {

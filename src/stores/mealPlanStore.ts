@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useRecipeStore } from '@/stores/recipeStore'
+import { useGroceryStore } from '@/stores/groceryStore'
 import { fetchCurrentPlan, updatePlan } from '@/services/mealPlanService'
 import { getSuggestions } from '@/utils/mealPlanUtils'
 import type { CurrentPlan, Recipe } from '@/types'
@@ -50,20 +51,24 @@ export const useMealPlanStore = defineStore('mealPlan', () => {
     if (currentPlan.value[section].includes(recipeId)) return
     currentPlan.value[section].push(recipeId)
     updatePlan(currentPlan.value).catch(() => {})
+    useGroceryStore().invalidate()
   }
 
   function removeRecipe(recipeId: string, section: keyof CurrentPlan) {
     currentPlan.value[section] = currentPlan.value[section].filter((id) => id !== recipeId)
     updatePlan(currentPlan.value).catch(() => {})
+    useGroceryStore().invalidate()
   }
 
   function togglePlanType() {
     planType.value = planType.value === 'Weekly' ? 'Biweekly' : 'Weekly'
+    updatePlan(currentPlan.value, { type: planType.value }).catch(() => {})
   }
 
   function clearPlan() {
     currentPlan.value = { Breakfast: [], 'Lunch/Dinner': [] }
     updatePlan(currentPlan.value).catch(() => {})
+    useGroceryStore().invalidate()
   }
 
   function reusePlan(plan: { recipes?: CurrentPlan }) {
@@ -71,6 +76,7 @@ export const useMealPlanStore = defineStore('mealPlan', () => {
       plan.recipes ?? { Breakfast: [], 'Lunch/Dinner': [] },
     )
     updatePlan(currentPlan.value).catch(() => {})
+    useGroceryStore().invalidate()
   }
 
   return {

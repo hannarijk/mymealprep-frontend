@@ -48,5 +48,9 @@ export const useGroceryStore = defineStore('grocery', () => {
     updateGrocery(grocery.value).catch(() => {})
   }
 
-  return { grocery, isLoading, error, departments, totalItems, fetch, toggleItem, removeItem, addItem }
+  function invalidate() {
+    grocery.value = {}
+  }
+
+  return { grocery, isLoading, error, departments, totalItems, fetch, toggleItem, removeItem, addItem, invalidate }
 })
