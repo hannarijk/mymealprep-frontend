@@ -83,7 +83,6 @@ src/
 ├── views/         # Route-level page components (incl. LoginView, RegisterView)
 ├── stores/        # Pinia stores (state + actions)
 ├── services/      # Data service layer
-├── mocks/         # Dev-only data fixtures
 ├── utils/         # Pure business logic (no framework dependencies)
 ├── types/         # Shared TypeScript interfaces
 └── router/        # Vue Router configuration + auth guards
@@ -114,7 +113,7 @@ npx playwright install    # first run only
 npm run test:e2e
 ```
 
-Unit tests cover all Pinia stores and pure utility functions. Service calls are mocked with `vi.mock`.
+Unit tests cover all Pinia stores, services, mappers, and pure utility functions. Service calls are mocked with `vi.mock`; API client calls are mocked with `vi.mock('@/api/client')`.
 
 E2E tests require both the frontend dev server (port 5173) and the backend (port 8080) to be running:
 
