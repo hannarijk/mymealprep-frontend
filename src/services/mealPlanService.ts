@@ -39,6 +39,7 @@ export async function updatePlan(
   plan: CurrentPlan,
   meta?: { type?: 'Weekly' | 'Biweekly' },
 ): Promise<void> {
+  if (!activePlanId) await fetchCurrentPlan()
   if (!activePlanId) return
   if (meta?.type) activePlanMeta.type = meta.type
   await client.put(`/meal-plans/${activePlanId}`, {

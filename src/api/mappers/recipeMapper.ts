@@ -22,7 +22,7 @@ export function mapRecipe(api: ApiRecipe): Recipe {
     imageUrl: api.imageUrl,
     steps: api.steps,
     liked: api.liked,
-    ingredients: api.ingredients.map(mapIngredient),
+    ingredients: (api.ingredients ?? []).map(mapIngredient),
     usedWeeksAgo: null,
   }
 }

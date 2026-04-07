@@ -12,7 +12,7 @@ test.describe('Authentication', () => {
 
   test('redirect preserves the original destination', async ({ page }) => {
     await page.goto('/grocery')
-    await expect(page).toHaveURL(/\/login\?redirect=%2Fgrocery/)
+    await expect(page).toHaveURL(/\/login\?redirect=\/grocery/)
   })
 
   test('login with wrong password shows error', async ({ page }) => {

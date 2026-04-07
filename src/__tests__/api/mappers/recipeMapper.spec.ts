@@ -52,6 +52,13 @@ describe('recipeMapper', () => {
     expect(result.ingredients).toEqual([])
   })
 
+  it('handles missing ingredients field (omitempty from list endpoint)', () => {
+    const api = makeApiRecipe() as Omit<ApiRecipe, 'ingredients'> & { ingredients?: ApiRecipe['ingredients'] }
+    delete api.ingredients
+    const result = mapRecipe(api as ApiRecipe)
+    expect(result.ingredients).toEqual([])
+  })
+
   it('mapRecipes maps an array', () => {
     const result = mapRecipes([makeApiRecipe({ id: '1' }), makeApiRecipe({ id: '2' })])
     expect(result).toHaveLength(2)
