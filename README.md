@@ -115,3 +115,18 @@ npm run test:e2e
 ```
 
 Unit tests cover all Pinia stores and pure utility functions. Service calls are mocked with `vi.mock`.
+
+E2E tests require both the frontend dev server (port 5173) and the backend (port 8080) to be running:
+
+```sh
+# Terminal 1 — backend
+cd ../mymealprep-backend && docker compose up
+
+# Terminal 2 — frontend
+npm run dev
+
+# Terminal 3 — run E2E tests
+npm run test:e2e
+```
+
+`globalSetup` registers a fresh test user and seeds 3 recipes before the suite runs. Auth state is saved to `e2e/.auth/` (gitignored). The `auth` project runs without any stored session; the `authenticated` project reuses the saved session for plan and grocery tests.
