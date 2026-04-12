@@ -23,13 +23,6 @@ export interface ApiRecipe {
   ingredients: ApiIngredient[]
 }
 
-export interface ApiRecipeListResponse {
-  data: ApiRecipe[]
-  totalCount: number
-  page: number
-  limit: number
-}
-
 export interface ApiPlanRecipe {
   recipeId: string
   section: 'Breakfast' | 'Lunch/Dinner'
@@ -46,13 +39,6 @@ export interface ApiMealPlan {
   mains: number
   recipes: ApiPlanRecipe[]
   createdAt: string
-}
-
-export interface ApiMealPlanListResponse {
-  data: ApiMealPlan[]
-  totalCount: number
-  page: number
-  limit: number
 }
 
 export interface ApiGroceryItem {
