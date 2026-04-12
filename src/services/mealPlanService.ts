@@ -50,6 +50,13 @@ export async function updatePlan(
 }
 
 export async function fetchPlanHistory(): Promise<MealPlan[]> {
-  const res = await client.get<ApiMealPlanListResponse>('/meal-plans', { limit: 50 })
-  return mapMealPlans(res.data)
+  const limit = 50
+  const first = await client.get<ApiMealPlanListResponse>('/meal-plans', { limit, page: 1 })
+  const all = [...first.data]
+  const totalPages = Math.ceil(first.totalCount / limit)
+  for (let page = 2; page <= totalPages; page++) {
+    const res = await client.get<ApiMealPlanListResponse>('/meal-plans', { limit, page })
+    all.push(...res.data)
+  }
+  return mapMealPlans(all)
 }
