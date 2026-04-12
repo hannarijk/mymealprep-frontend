@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ApiError } from '@/api/client'
 
 vi.mock('@/api/client', async (importOriginal) => {
@@ -7,6 +7,7 @@ vi.mock('@/api/client', async (importOriginal) => {
     ...actual,
     client: {
       get: vi.fn(),
+      getAll: vi.fn(),
       post: vi.fn(),
       put: vi.fn(),
       patch: vi.fn(),
@@ -17,12 +18,12 @@ vi.mock('@/api/client', async (importOriginal) => {
 
 import { client } from '@/api/client'
 import { fetchRecipes } from '@/services/recipeService'
-import type { ApiRecipeListResponse } from '@/api/types'
+import type { ApiRecipe } from '@/api/types'
 
-const makeApiRecipe = (id: string) => ({
+const makeApiRecipe = (id: string): ApiRecipe => ({
   id,
   name: `Recipe ${id}`,
-  section: 'Breakfast' as const,
+  section: 'Breakfast',
   tags: ['quick'],
   timeMinutes: 20,
   servings: 2,
@@ -33,22 +34,17 @@ const makeApiRecipe = (id: string) => ({
   ingredients: [{ id: 'i-1', name: 'Oats', amount: '100g', department: 'Grains' }],
 })
 
-const mockResponse: ApiRecipeListResponse = {
-  data: [makeApiRecipe('r-1'), makeApiRecipe('r-2')],
-  totalCount: 2,
-  page: 1,
-  limit: 100,
-}
-
 describe('recipeService', () => {
-  it('calls GET /recipes with limit=100', async () => {
-    vi.mocked(client.get).mockResolvedValue(mockResponse)
+  beforeEach(() => vi.clearAllMocks())
+
+  it('calls client.getAll with /recipes and limit=100', async () => {
+    vi.mocked(client.getAll).mockResolvedValue([])
     await fetchRecipes()
-    expect(client.get).toHaveBeenCalledWith('/recipes', { limit: 100 })
+    expect(client.getAll).toHaveBeenCalledWith('/recipes', { limit: 100 })
   })
 
-  it('maps API response to Recipe[]', async () => {
-    vi.mocked(client.get).mockResolvedValue(mockResponse)
+  it('maps returned items to Recipe[]', async () => {
+    vi.mocked(client.getAll).mockResolvedValue([makeApiRecipe('r-1'), makeApiRecipe('r-2')])
     const result = await fetchRecipes()
     expect(result).toHaveLength(2)
     expect(result[0]?.id).toBe('r-1')
@@ -59,7 +55,7 @@ describe('recipeService', () => {
   })
 
   it('propagates ApiError from client', async () => {
-    vi.mocked(client.get).mockRejectedValue(new ApiError(401, 'Unauthorized'))
+    vi.mocked(client.getAll).mockRejectedValue(new ApiError(401, 'Unauthorized'))
     await expect(fetchRecipes()).rejects.toThrow('Unauthorized')
   })
 })

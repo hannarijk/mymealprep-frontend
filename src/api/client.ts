@@ -21,6 +21,11 @@ export function setUnauthorizedHandler(fn: () => void): void {
 
 type Params = Record<string, string | number | boolean | undefined | null>
 
+export interface Paginated<T> {
+  data: T[]
+  totalCount: number
+}
+
 async function request<T>(
   method: string,
   path: string,
@@ -69,8 +74,21 @@ async function request<T>(
   return res.json() as Promise<T>
 }
 
+async function getAll<T>(path: string, params?: Params): Promise<T[]> {
+  const limit = Number(params?.limit ?? 100)
+  const first = await request<Paginated<T>>('GET', path, { params: { ...params, page: 1 } })
+  const all = [...first.data]
+  const totalPages = Math.ceil(first.totalCount / limit)
+  for (let page = 2; page <= totalPages; page++) {
+    const res = await request<Paginated<T>>('GET', path, { params: { ...params, page } })
+    all.push(...res.data)
+  }
+  return all
+}
+
 export const client = {
   get: <T>(path: string, params?: Params) => request<T>('GET', path, { params }),
+  getAll: <T>(path: string, params?: Params) => getAll<T>(path, params),
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, { body }),
   put: <T>(path: string, body?: unknown) => request<T>('PUT', path, { body }),
   patch: <T>(path: string, body?: unknown) => request<T>('PATCH', path, { body }),

@@ -7,6 +7,7 @@ vi.mock('@/api/client', async (importOriginal) => {
     ...actual,
     client: {
       get: vi.fn(),
+      getAll: vi.fn(),
       post: vi.fn(),
       put: vi.fn(),
       patch: vi.fn(),
@@ -17,7 +18,7 @@ vi.mock('@/api/client', async (importOriginal) => {
 
 import { client } from '@/api/client'
 import { fetchCurrentPlan, updatePlan, fetchPlanHistory } from '@/services/mealPlanService'
-import type { ApiMealPlan, ApiMealPlanListResponse } from '@/api/types'
+import type { ApiMealPlan } from '@/api/types'
 
 const makeApiPlan = (overrides: Partial<ApiMealPlan> = {}): ApiMealPlan => ({
   id: 'plan-1',
@@ -119,16 +120,15 @@ describe('mealPlanService', () => {
   })
 
   describe('fetchPlanHistory', () => {
-    it('calls GET /meal-plans with limit=50', async () => {
-      const mockResponse: ApiMealPlanListResponse = {
-        data: [makeApiPlan({ id: '1' }), makeApiPlan({ id: '2' })],
-        totalCount: 2,
-        page: 1,
-        limit: 50,
-      }
-      vi.mocked(client.get).mockResolvedValue(mockResponse)
+    it('calls client.getAll with /meal-plans and limit=100', async () => {
+      vi.mocked(client.getAll).mockResolvedValue([])
+      await fetchPlanHistory()
+      expect(client.getAll).toHaveBeenCalledWith('/meal-plans', { limit: 100 })
+    })
+
+    it('maps returned items to MealPlan[]', async () => {
+      vi.mocked(client.getAll).mockResolvedValue([makeApiPlan({ id: '1' }), makeApiPlan({ id: '2' })])
       const result = await fetchPlanHistory()
-      expect(client.get).toHaveBeenCalledWith('/meal-plans', { limit: 50 })
       expect(result).toHaveLength(2)
       expect(result[0]?.id).toBe('1')
     })

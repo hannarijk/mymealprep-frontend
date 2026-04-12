@@ -1,7 +1,7 @@
 import { client } from '@/api/client'
 import { ApiError } from '@/api/client'
 import { mapRecipesToCurrentPlan, mapCurrentPlanToRecipes, mapMealPlans } from '@/api/mappers/mealPlanMapper'
-import type { ApiMealPlan, ApiMealPlanListResponse } from '@/api/types'
+import type { ApiMealPlan } from '@/api/types'
 import type { CurrentPlan, MealPlan } from '@/types'
 
 let activePlanId: string | null = null
@@ -50,13 +50,6 @@ export async function updatePlan(
 }
 
 export async function fetchPlanHistory(): Promise<MealPlan[]> {
-  const limit = 50
-  const first = await client.get<ApiMealPlanListResponse>('/meal-plans', { limit, page: 1 })
-  const all = [...first.data]
-  const totalPages = Math.ceil(first.totalCount / limit)
-  for (let page = 2; page <= totalPages; page++) {
-    const res = await client.get<ApiMealPlanListResponse>('/meal-plans', { limit, page })
-    all.push(...res.data)
-  }
-  return mapMealPlans(all)
+  const data = await client.getAll<ApiMealPlan>('/meal-plans', { limit: 100 })
+  return mapMealPlans(data)
 }

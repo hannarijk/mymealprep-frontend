@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { client, ApiError, setTokenAccessor, setUnauthorizedHandler } from '@/api/client'
+import { client, setTokenAccessor, setUnauthorizedHandler, type Paginated } from '@/api/client'
 
 function mockFetch(status: number, body: unknown, headers: Record<string, string> = {}) {
   const response = {
@@ -100,5 +100,63 @@ describe('client', () => {
     await expect(client.get('/recipes')).rejects.toMatchObject({
       status: 500,
     })
+  })
+})
+
+describe('client.getAll', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  function mockFetchSequence(responses: { status: number; body: unknown }[]) {
+    const mocks = responses.map(({ status, body }) =>
+      Promise.resolve({
+        ok: status >= 200 && status < 300,
+        status,
+        statusText: 'OK',
+        json: vi.fn().mockResolvedValue(body),
+        headers: new Headers(),
+      }),
+    )
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(() => mocks.shift()))
+  }
+
+  it('returns all items from a single page', async () => {
+    const page1: Paginated<{ id: string }> = { data: [{ id: '1' }, { id: '2' }], totalCount: 2 }
+    mockFetchSequence([{ status: 200, body: page1 }])
+    const result = await client.getAll<{ id: string }>('/items', { limit: 100 })
+    expect(result).toEqual([{ id: '1' }, { id: '2' }])
+    expect(fetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('fetches all pages and concatenates results', async () => {
+    const page1: Paginated<{ id: string }> = { data: [{ id: '1' }], totalCount: 2 }
+    const page2: Paginated<{ id: string }> = { data: [{ id: '2' }], totalCount: 2 }
+    mockFetchSequence([
+      { status: 200, body: page1 },
+      { status: 200, body: page2 },
+    ])
+    const result = await client.getAll<{ id: string }>('/items', { limit: 1 })
+    expect(result).toEqual([{ id: '1' }, { id: '2' }])
+    expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('returns empty array when totalCount is 0', async () => {
+    const empty: Paginated<{ id: string }> = { data: [], totalCount: 0 }
+    mockFetchSequence([{ status: 200, body: empty }])
+    const result = await client.getAll<{ id: string }>('/items', { limit: 100 })
+    expect(result).toHaveLength(0)
+    expect(fetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('passes page=1 on the first request', async () => {
+    const page1: Paginated<{ id: string }> = { data: [], totalCount: 0 }
+    mockFetchSequence([{ status: 200, body: page1 }])
+    await client.getAll<{ id: string }>('/items', { limit: 100 })
+    const calledUrl = (fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string
+    expect(calledUrl).toContain('page=1')
+  })
+
+  it('propagates ApiError', async () => {
+    mockFetchSequence([{ status: 500, body: { error: 'Server error' } }])
+    await expect(client.getAll('/items')).rejects.toMatchObject({ status: 500 })
   })
 })
