@@ -28,11 +28,14 @@ describe('groceryStore', () => {
     expect(store.departments).toContain('Produce')
   })
 
-  it('fetch is a no-op when grocery already loaded', async () => {
-    vi.mocked(fetchGrocery).mockResolvedValue({ Produce: [] })
+  it('fetch is a no-op while already loading', async () => {
+    let resolve!: () => void
+    vi.mocked(fetchGrocery).mockReturnValue(new Promise<GroceryGroup>((r) => { resolve = () => r({}) }))
     const store = useGroceryStore()
-    await store.fetch()
-    await store.fetch()
+    const first = store.fetch()
+    await store.fetch() // second call while first is in-flight
+    resolve()
+    await first
     expect(fetchGrocery).toHaveBeenCalledTimes(1)
   })
 
@@ -105,15 +108,12 @@ describe('groceryStore', () => {
     expect(store.grocery['Pantry']?.[0]?.name).toBe('Olive oil')
   })
 
-  it('invalidate resets grocery state and allows fetch to run again', async () => {
+  it('fetch refetches on every call', async () => {
     vi.mocked(fetchGrocery).mockResolvedValue({ Produce: [{ id: 'p-1', name: 'Spinach', amount: '', checked: false }] })
     const store = useGroceryStore()
     await store.fetch()
-    expect(fetchGrocery).toHaveBeenCalledTimes(1)
-    store.invalidate()
     await store.fetch()
     expect(fetchGrocery).toHaveBeenCalledTimes(2)
-    expect(store.departments).toContain('Produce')
   })
 
   it('totalItems sums items across all departments', () => {

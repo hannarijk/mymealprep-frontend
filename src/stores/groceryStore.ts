@@ -20,7 +20,7 @@ export const useGroceryStore = defineStore('grocery', () => {
   )
 
   async function fetch() {
-    if (isLoading.value || Object.keys(grocery.value).length > 0) return
+    if (isLoading.value) return
     isLoading.value = true
     error.value = null
     try {
@@ -63,10 +63,6 @@ export const useGroceryStore = defineStore('grocery', () => {
     grocery.value[department] = [...items, item]
   }
 
-  function invalidate() {
-    grocery.value = {}
-  }
-
   return {
     grocery,
     isLoading,
@@ -77,6 +73,5 @@ export const useGroceryStore = defineStore('grocery', () => {
     toggleItem,
     removeItem,
     addItem,
-    invalidate,
   }
 })
