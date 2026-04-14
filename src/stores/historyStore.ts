@@ -42,9 +42,9 @@ export const useHistoryStore = defineStore('history', () => {
     historyPage.value = Math.min(totalHistoryPages.value, historyPage.value + 1)
   }
 
-  function reusePlan(plan: MealPlan) {
+  async function reusePlan(plan: MealPlan) {
     const mealPlanStore = useMealPlanStore()
-    mealPlanStore.reusePlan(plan)
+    await mealPlanStore.reusePlan(plan)
   }
 
   return {

@@ -46,7 +46,13 @@ export async function updatePlan(
     ...activePlanMeta,
     recipes: mapCurrentPlanToRecipes(plan),
   })
-  client.post('/grocery/regenerate', {}).catch(() => {})
+}
+
+export async function activatePlan(planId: string): Promise<CurrentPlan> {
+  const plan = await client.post<ApiMealPlan>(`/meal-plans/${planId}/activate`, {})
+  activePlanId = plan.id
+  activePlanMeta = { title: plan.title, type: plan.type, notes: plan.notes }
+  return mapRecipesToCurrentPlan(plan.recipes)
 }
 
 export async function fetchPlanHistory(): Promise<MealPlan[]> {
