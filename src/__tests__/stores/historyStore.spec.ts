@@ -7,6 +7,7 @@ import type { MealPlan } from '@/types'
 vi.mock('@/services/mealPlanService', () => ({
   fetchCurrentPlan: vi.fn().mockResolvedValue({ Breakfast: [], 'Lunch/Dinner': [] }),
   updatePlan: vi.fn().mockResolvedValue(undefined),
+  activatePlan: vi.fn(),
   fetchPlanHistory: vi.fn(),
 }))
 
@@ -14,7 +15,7 @@ vi.mock('@/services/recipeService', () => ({
   fetchRecipes: vi.fn(),
 }))
 
-import { fetchPlanHistory } from '@/services/mealPlanService'
+import { fetchPlanHistory, activatePlan } from '@/services/mealPlanService'
 
 const makePlan = (id: string): MealPlan => ({
   id,
@@ -93,11 +94,12 @@ describe('historyStore', () => {
     expect(store.historyPage).toBe(1)
   })
 
-  it('reusePlan sets mealPlanStore.currentPlan to plan.recipes', () => {
+  it('reusePlan calls activatePlan and updates mealPlanStore.currentPlan', async () => {
+    vi.mocked(activatePlan).mockResolvedValue({ Breakfast: ['5'], 'Lunch/Dinner': ['15'] })
     const store = useHistoryStore()
     const mealPlanStore = useMealPlanStore()
-    const plan = makePlan('5')
-    store.reusePlan(plan)
+    await store.reusePlan(makePlan('5'))
+    expect(activatePlan).toHaveBeenCalledWith('5')
     expect(mealPlanStore.currentPlan.Breakfast).toEqual(['5'])
     expect(mealPlanStore.currentPlan['Lunch/Dinner']).toEqual(['15'])
   })
