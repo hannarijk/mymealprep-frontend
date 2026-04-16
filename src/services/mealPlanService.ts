@@ -11,7 +11,11 @@ let activePlanMeta: { title: string; type: 'Weekly' | 'Biweekly'; notes: string 
   notes: '',
 }
 
-export async function fetchCurrentPlan(): Promise<CurrentPlan> {
+export async function fetchCurrentPlan(): Promise<{
+  recipes: CurrentPlan
+  title: string
+  type: 'Weekly' | 'Biweekly'
+}> {
   let plan: ApiMealPlan
 
   try {
@@ -31,27 +35,34 @@ export async function fetchCurrentPlan(): Promise<CurrentPlan> {
 
   activePlanId = plan.id
   activePlanMeta = { title: plan.title, type: plan.type, notes: plan.notes }
-  return mapRecipesToCurrentPlan(plan.recipes)
+  return { recipes: mapRecipesToCurrentPlan(plan.recipes), title: plan.title, type: plan.type }
 }
 
 export async function updatePlan(
   plan: CurrentPlan,
-  meta?: { type?: 'Weekly' | 'Biweekly' },
+  meta?: { type?: 'Weekly' | 'Biweekly'; title?: string },
 ): Promise<void> {
   if (!activePlanId) await fetchCurrentPlan()
   if (!activePlanId) return
   if (meta?.type) activePlanMeta.type = meta.type
+  if (meta?.title) activePlanMeta.title = meta.title
   await client.put(`/meal-plans/${activePlanId}`, {
     ...activePlanMeta,
     recipes: mapCurrentPlanToRecipes(plan),
   })
 }
 
-export async function clonePlan(planId: string): Promise<CurrentPlan> {
-  const plan = await client.post<ApiMealPlan>(`/meal-plans/${planId}/clone`, {})
+export async function clonePlan(
+  planId: string,
+  title?: string,
+): Promise<{ recipes: CurrentPlan; title: string }> {
+  const plan = await client.post<ApiMealPlan>(
+    `/meal-plans/${planId}/clone`,
+    title ? { title } : {},
+  )
   activePlanId = plan.id
   activePlanMeta = { title: plan.title, type: plan.type, notes: plan.notes }
-  return mapRecipesToCurrentPlan(plan.recipes)
+  return { recipes: mapRecipesToCurrentPlan(plan.recipes), title: plan.title }
 }
 
 export async function fetchPlanHistory(): Promise<MealPlan[]> {

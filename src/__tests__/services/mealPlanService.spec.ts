@@ -43,11 +43,13 @@ beforeEach(() => {
 
 describe('mealPlanService', () => {
   describe('fetchCurrentPlan', () => {
-    it('returns mapped CurrentPlan from active plan', async () => {
-      vi.mocked(client.get).mockResolvedValue(makeApiPlan())
+    it('returns mapped recipes, title, and type from active plan', async () => {
+      vi.mocked(client.get).mockResolvedValue(makeApiPlan({ title: 'Week 1', type: 'Biweekly' }))
       const result = await fetchCurrentPlan()
-      expect(result.Breakfast).toEqual(['r1'])
-      expect(result['Lunch/Dinner']).toEqual(['r2'])
+      expect(result.recipes.Breakfast).toEqual(['r1'])
+      expect(result.recipes['Lunch/Dinner']).toEqual(['r2'])
+      expect(result.title).toBe('Week 1')
+      expect(result.type).toBe('Biweekly')
     })
 
     it('calls GET /meal-plans/active', async () => {
@@ -64,7 +66,7 @@ describe('mealPlanService', () => {
       const result = await fetchCurrentPlan()
       expect(client.post).toHaveBeenCalledTimes(1)
       expect(client.post).toHaveBeenCalledWith('/meal-plans', expect.objectContaining({ recipes: [] }))
-      expect(result.Breakfast).toEqual(['r1'])
+      expect(result.recipes.Breakfast).toEqual(['r1'])
     })
 
     it('re-throws non-404 errors', async () => {
@@ -104,6 +106,19 @@ describe('mealPlanService', () => {
       )
     })
 
+    it('persists title change via meta param', async () => {
+      vi.mocked(client.get).mockResolvedValue(makeApiPlan({ id: 'plan-99', title: 'Old Title' }))
+      vi.mocked(client.put).mockResolvedValue(undefined)
+
+      await fetchCurrentPlan()
+      await updatePlan({ Breakfast: [], 'Lunch/Dinner': [] }, { title: 'New Title' })
+
+      expect(client.put).toHaveBeenCalledWith(
+        '/meal-plans/plan-99',
+        expect.objectContaining({ title: 'New Title' }),
+      )
+    })
+
     it('does not call /grocery/regenerate', async () => {
       vi.mocked(client.get).mockResolvedValue(makeApiPlan({ id: 'plan-99' }))
       vi.mocked(client.put).mockResolvedValue(undefined)
@@ -116,12 +131,24 @@ describe('mealPlanService', () => {
   })
 
   describe('clonePlan', () => {
-    it('calls POST /meal-plans/:id/clone and returns mapped CurrentPlan', async () => {
+    it('calls POST /meal-plans/:id/clone with empty body when no title given', async () => {
       vi.mocked(client.post).mockResolvedValue(makeApiPlan({ id: 'plan-42' }))
-      const result = await clonePlan('plan-42')
+      await clonePlan('plan-42')
       expect(client.post).toHaveBeenCalledWith('/meal-plans/plan-42/clone', {})
-      expect(result.Breakfast).toEqual(['r1'])
-      expect(result['Lunch/Dinner']).toEqual(['r2'])
+    })
+
+    it('passes title in body when provided', async () => {
+      vi.mocked(client.post).mockResolvedValue(makeApiPlan({ id: 'plan-42', title: 'Week 1 (copy)' }))
+      await clonePlan('plan-42', 'Week 1 (copy)')
+      expect(client.post).toHaveBeenCalledWith('/meal-plans/plan-42/clone', { title: 'Week 1 (copy)' })
+    })
+
+    it('returns mapped recipes and title from cloned plan', async () => {
+      vi.mocked(client.post).mockResolvedValue(makeApiPlan({ id: 'plan-42', title: 'Week 1 (copy)' }))
+      const result = await clonePlan('plan-42', 'Week 1 (copy)')
+      expect(result.recipes.Breakfast).toEqual(['r1'])
+      expect(result.recipes['Lunch/Dinner']).toEqual(['r2'])
+      expect(result.title).toBe('Week 1 (copy)')
     })
 
     it('updates activePlanId so subsequent updatePlan uses the cloned plan', async () => {
