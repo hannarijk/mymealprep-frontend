@@ -17,7 +17,7 @@ vi.mock('@/api/client', async (importOriginal) => {
 })
 
 import { client } from '@/api/client'
-import { fetchCurrentPlan, updatePlan, activatePlan, fetchPlanHistory } from '@/services/mealPlanService'
+import { fetchCurrentPlan, updatePlan, clonePlan, fetchPlanHistory } from '@/services/mealPlanService'
 import type { ApiMealPlan } from '@/api/types'
 
 const makeApiPlan = (overrides: Partial<ApiMealPlan> = {}): ApiMealPlan => ({
@@ -26,7 +26,7 @@ const makeApiPlan = (overrides: Partial<ApiMealPlan> = {}): ApiMealPlan => ({
   type: 'Weekly',
   notes: '',
   active: true,
-  reused: false,
+  sourcePlanId: null,
   breakfasts: 2,
   mains: 3,
   recipes: [
@@ -56,17 +56,14 @@ describe('mealPlanService', () => {
       expect(client.get).toHaveBeenCalledWith('/meal-plans/active')
     })
 
-    it('auto-creates and activates plan on 404', async () => {
-      const created = makeApiPlan({ id: 'new-plan' })
-      const activated = makeApiPlan({ id: 'new-plan', active: true })
+    it('auto-creates plan on 404 (create now activates immediately)', async () => {
+      const created = makeApiPlan({ id: 'new-plan', active: true })
       vi.mocked(client.get).mockRejectedValue(new ApiError(404, 'Not found'))
-      vi.mocked(client.post)
-        .mockResolvedValueOnce(created)
-        .mockResolvedValueOnce(activated)
+      vi.mocked(client.post).mockResolvedValueOnce(created)
 
       const result = await fetchCurrentPlan()
+      expect(client.post).toHaveBeenCalledTimes(1)
       expect(client.post).toHaveBeenCalledWith('/meal-plans', expect.objectContaining({ recipes: [] }))
-      expect(client.post).toHaveBeenCalledWith('/meal-plans/new-plan/activate', {})
       expect(result.Breakfast).toEqual(['r1'])
     })
 
@@ -118,19 +115,19 @@ describe('mealPlanService', () => {
     })
   })
 
-  describe('activatePlan', () => {
-    it('calls POST /meal-plans/:id/activate and returns mapped CurrentPlan', async () => {
+  describe('clonePlan', () => {
+    it('calls POST /meal-plans/:id/clone and returns mapped CurrentPlan', async () => {
       vi.mocked(client.post).mockResolvedValue(makeApiPlan({ id: 'plan-42' }))
-      const result = await activatePlan('plan-42')
-      expect(client.post).toHaveBeenCalledWith('/meal-plans/plan-42/activate', {})
+      const result = await clonePlan('plan-42')
+      expect(client.post).toHaveBeenCalledWith('/meal-plans/plan-42/clone', {})
       expect(result.Breakfast).toEqual(['r1'])
       expect(result['Lunch/Dinner']).toEqual(['r2'])
     })
 
-    it('updates activePlanId so subsequent updatePlan uses the activated plan', async () => {
+    it('updates activePlanId so subsequent updatePlan uses the cloned plan', async () => {
       vi.mocked(client.post).mockResolvedValue(makeApiPlan({ id: 'plan-42' }))
       vi.mocked(client.put).mockResolvedValue(undefined)
-      await activatePlan('plan-42')
+      await clonePlan('plan-42')
       await updatePlan({ Breakfast: [], 'Lunch/Dinner': [] })
       expect(client.put).toHaveBeenCalledWith('/meal-plans/plan-42', expect.anything())
     })

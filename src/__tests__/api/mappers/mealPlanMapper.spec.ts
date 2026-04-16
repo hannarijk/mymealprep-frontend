@@ -8,7 +8,7 @@ const makeApiPlan = (overrides: Partial<ApiMealPlan> = {}): ApiMealPlan => ({
   type: 'Weekly',
   notes: '',
   active: true,
-  reused: false,
+  sourcePlanId: null,
   breakfasts: 3,
   mains: 4,
   recipes: [
@@ -66,9 +66,14 @@ describe('mealPlanMapper', () => {
       expect(result.title).toBe('My Meal Plan')
       expect(result.type).toBe('Weekly')
       expect(result.active).toBe(true)
-      expect(result.reused).toBe(false)
+      expect(result.sourcePlanId).toBeNull()
       expect(result.breakfasts).toBe(3)
       expect(result.mains).toBe(4)
+    })
+
+    it('maps non-null sourcePlanId', () => {
+      const result = mapMealPlan(makeApiPlan({ sourcePlanId: 'parent-plan-id' }))
+      expect(result.sourcePlanId).toBe('parent-plan-id')
     })
 
     it('maps recipes into CurrentPlan structure', () => {
