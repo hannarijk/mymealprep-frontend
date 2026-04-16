@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, nextTick, useTemplateRef, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ShoppingCart, Trash2 } from 'lucide-vue-next'
+import { ShoppingCart, Trash2, Pencil } from 'lucide-vue-next'
 import { useMealPlanStore } from '@/stores/mealPlanStore'
 import { useRecipeStore } from '@/stores/recipeStore'
 import { useUIStore } from '@/stores/uiStore'
@@ -13,6 +13,32 @@ const router = useRouter()
 const mealPlanStore = useMealPlanStore()
 const recipeStore = useRecipeStore()
 const uiStore = useUIStore()
+
+const editingTitle = ref(false)
+const draftTitle = ref('')
+const titleInput = useTemplateRef<HTMLInputElement>('titleInput')
+const titleMirror = useTemplateRef<HTMLSpanElement>('titleMirror')
+
+function startEdit() {
+  draftTitle.value = mealPlanStore.planTitle || 'My Meal Plan'
+  editingTitle.value = true
+  nextTick(() => {
+    titleInput.value?.focus()
+    titleInput.value?.select()
+  })
+}
+
+async function saveTitle() {
+  const trimmed = draftTitle.value.trim()
+  if (trimmed && trimmed !== mealPlanStore.planTitle) {
+    await mealPlanStore.renameActivePlan(trimmed)
+  }
+  editingTitle.value = false
+}
+
+function cancelEdit() {
+  editingTitle.value = false
+}
 
 onMounted(async () => {
   await recipeStore.fetch()
@@ -26,7 +52,52 @@ onMounted(async () => {
     <main class="min-w-0 flex-1 p-5 lg:border-r lg:border-slate-100">
       <!-- Top bar -->
       <div class="mb-5 flex items-center justify-between">
-        <h2 class="text-lg font-bold tracking-tight text-slate-900">Current Plan</h2>
+        <!-- Plan title: skeleton → view → edit -->
+        <div class="min-w-0">
+          <div v-if="mealPlanStore.isLoading" class="h-7 w-40 animate-pulse rounded-lg bg-slate-200" />
+
+          <div
+            v-else-if="!editingTitle"
+            class="group flex cursor-pointer items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+            tabindex="0"
+            role="button"
+            :aria-label="`Edit plan name: ${mealPlanStore.planTitle || 'My Meal Plan'}`"
+            @click="startEdit"
+            @keydown.enter="startEdit"
+          >
+            <h2 class="text-lg font-bold tracking-tight text-slate-900">
+              {{ mealPlanStore.planTitle || 'My Meal Plan' }}
+            </h2>
+            <Pencil
+              class="h-4 w-4 shrink-0 text-slate-400 opacity-0 transition group-hover:opacity-100 group-focus-within:opacity-100"
+              aria-hidden="true"
+            />
+          </div>
+
+          <div v-else class="flex flex-col">
+            <div class="relative flex items-center">
+              <!-- Hidden mirror for input auto-sizing -->
+              <span
+                ref="titleMirror"
+                class="invisible absolute text-lg font-bold tracking-tight whitespace-pre"
+                aria-hidden="true"
+              >{{ draftTitle || ' ' }}</span>
+              <input
+                ref="titleInput"
+                v-model="draftTitle"
+                :style="{ width: titleMirror ? `${titleMirror.offsetWidth}px` : 'auto' }"
+                class="min-w-20 border-b-2 border-slate-300 bg-transparent text-lg font-bold tracking-tight text-slate-900 outline-none transition-colors focus:border-slate-700"
+                aria-label="Plan name"
+                @blur="saveTitle"
+                @keyup.enter="saveTitle"
+                @keyup.escape="cancelEdit"
+              />
+            </div>
+            <p v-if="mealPlanStore.renameError" class="mt-1 text-xs text-rose-500">
+              {{ mealPlanStore.renameError }}
+            </p>
+          </div>
+        </div>
         <div class="flex gap-2">
           <button
             class="flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600"
