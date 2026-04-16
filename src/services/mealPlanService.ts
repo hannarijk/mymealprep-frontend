@@ -18,13 +18,12 @@ export async function fetchCurrentPlan(): Promise<CurrentPlan> {
     plan = await client.get<ApiMealPlan>('/meal-plans/active')
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) {
-      const created = await client.post<ApiMealPlan>('/meal-plans', {
+      plan = await client.post<ApiMealPlan>('/meal-plans', {
         title: activePlanMeta.title,
         type: activePlanMeta.type,
         notes: activePlanMeta.notes,
         recipes: [],
       })
-      plan = await client.post<ApiMealPlan>(`/meal-plans/${created.id}/activate`, {})
     } else {
       throw e
     }
@@ -48,8 +47,8 @@ export async function updatePlan(
   })
 }
 
-export async function activatePlan(planId: string): Promise<CurrentPlan> {
-  const plan = await client.post<ApiMealPlan>(`/meal-plans/${planId}/activate`, {})
+export async function clonePlan(planId: string): Promise<CurrentPlan> {
+  const plan = await client.post<ApiMealPlan>(`/meal-plans/${planId}/clone`, {})
   activePlanId = plan.id
   activePlanMeta = { title: plan.title, type: plan.type, notes: plan.notes }
   return mapRecipesToCurrentPlan(plan.recipes)

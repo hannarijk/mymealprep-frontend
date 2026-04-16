@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useRecipeStore } from '@/stores/recipeStore'
-import { fetchCurrentPlan, updatePlan, activatePlan } from '@/services/mealPlanService'
+import { fetchCurrentPlan, updatePlan, clonePlan } from '@/services/mealPlanService'
 import { getSuggestions } from '@/utils/mealPlanUtils'
 import type { CurrentPlan, MealPlan, Recipe } from '@/types'
 
@@ -68,7 +68,7 @@ export const useMealPlanStore = defineStore('mealPlan', () => {
   }
 
   async function reusePlan(plan: MealPlan) {
-    currentPlan.value = await activatePlan(plan.id)
+    currentPlan.value = await clonePlan(plan.id)
   }
 
   return {
