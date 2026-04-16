@@ -27,7 +27,7 @@ export function mapMealPlan(api: ApiMealPlan): MealPlan {
     type: api.type,
     notes: api.notes,
     active: api.active,
-    reused: api.reused,
+    sourcePlanId: api.sourcePlanId,
     breakfasts: api.breakfasts,
     mains: api.mains,
     recipes: mapRecipesToCurrentPlan(api.recipes),

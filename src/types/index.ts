@@ -42,7 +42,7 @@ export interface MealPlan {
   breakfasts: number
   mains: number
   notes: string
-  reused: boolean
+  sourcePlanId: string | null
   active?: boolean
   recipes?: CurrentPlan
 }

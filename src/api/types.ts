@@ -34,7 +34,7 @@ export interface ApiMealPlan {
   type: 'Weekly' | 'Biweekly'
   notes: string
   active: boolean
-  reused: boolean
+  sourcePlanId: string | null
   breakfasts: number
   mains: number
   recipes: ApiPlanRecipe[]
