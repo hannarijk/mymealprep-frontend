@@ -47,12 +47,14 @@ async function handleReuse(plan: (typeof historyStore.pagedHistory)[number]) {
               <h3 class="font-semibold text-slate-900">{{ plan.title }}</h3>
               <Pill :tone="plan.type === 'Weekly' ? 'default' : 'purple'">{{ plan.type }}</Pill>
               <Pill v-if="plan.active" tone="green">Current</Pill>
-              <Pill v-if="plan.reused" tone="amber">Reused before</Pill>
             </div>
             <div class="flex gap-4 text-sm text-slate-500">
               <span>{{ plan.breakfasts }} breakfast{{ plan.breakfasts !== 1 ? 's' : '' }}</span>
               <span>{{ plan.mains }} main{{ plan.mains !== 1 ? 's' : '' }}</span>
             </div>
+            <p v-if="plan.sourcePlanId" class="mt-1 text-xs text-slate-400">
+              ↩ from {{ historyStore.history.find(p => p.id === plan.sourcePlanId)?.title ?? 'another plan' }}
+            </p>
             <p v-if="plan.notes" class="mt-1.5 text-sm text-slate-500 italic">
               "{{ plan.notes }}"
             </p>
