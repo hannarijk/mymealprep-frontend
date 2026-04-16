@@ -5,7 +5,7 @@ import { useMealPlanStore } from '@/stores/mealPlanStore'
 import type { MealPlan } from '@/types'
 
 vi.mock('@/services/mealPlanService', () => ({
-  fetchCurrentPlan: vi.fn().mockResolvedValue({ Breakfast: [], 'Lunch/Dinner': [] }),
+  fetchCurrentPlan: vi.fn().mockResolvedValue({ recipes: { Breakfast: [], 'Lunch/Dinner': [] }, title: 'My Meal Plan', type: 'Weekly' }),
   updatePlan: vi.fn().mockResolvedValue(undefined),
   clonePlan: vi.fn(),
   fetchPlanHistory: vi.fn(),
@@ -94,13 +94,17 @@ describe('historyStore', () => {
     expect(store.historyPage).toBe(1)
   })
 
-  it('reusePlan calls clonePlan and updates mealPlanStore.currentPlan', async () => {
-    vi.mocked(clonePlan).mockResolvedValue({ Breakfast: ['5'], 'Lunch/Dinner': ['15'] })
+  it('reusePlan calls clonePlan with copy title and updates mealPlanStore', async () => {
+    vi.mocked(clonePlan).mockResolvedValue({
+      recipes: { Breakfast: ['5'], 'Lunch/Dinner': ['15'] },
+      title: 'Week 5 (copy)',
+    })
     const store = useHistoryStore()
     const mealPlanStore = useMealPlanStore()
     await store.reusePlan(makePlan('5'))
-    expect(clonePlan).toHaveBeenCalledWith('5')
+    expect(clonePlan).toHaveBeenCalledWith('5', 'Week 5 (copy)')
     expect(mealPlanStore.currentPlan.Breakfast).toEqual(['5'])
     expect(mealPlanStore.currentPlan['Lunch/Dinner']).toEqual(['15'])
+    expect(mealPlanStore.planTitle).toBe('Week 5 (copy)')
   })
 })

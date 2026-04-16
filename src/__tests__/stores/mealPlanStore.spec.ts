@@ -11,6 +11,14 @@ vi.mock('@/services/mealPlanService', () => ({
   fetchPlanHistory: vi.fn(),
 }))
 
+const makeFetchResult = (
+  overrides: Partial<{ title: string; type: 'Weekly' | 'Biweekly'; recipes: { Breakfast: string[]; 'Lunch/Dinner': string[] } }> = {},
+) => ({
+  recipes: { Breakfast: [], 'Lunch/Dinner': [], ...overrides.recipes },
+  title: overrides.title ?? 'My Meal Plan',
+  type: overrides.type ?? ('Weekly' as const),
+})
+
 vi.mock('@/services/recipeService', () => ({
   fetchRecipes: vi.fn(),
 }))
@@ -43,12 +51,16 @@ beforeEach(() => {
 })
 
 describe('mealPlanStore', () => {
-  it('fetch sets currentPlan from service', async () => {
-    vi.mocked(fetchCurrentPlan).mockResolvedValue({ Breakfast: ['1'], 'Lunch/Dinner': ['4'] })
+  it('fetch sets currentPlan, planTitle, and planType from service', async () => {
+    vi.mocked(fetchCurrentPlan).mockResolvedValue(
+      makeFetchResult({ recipes: { Breakfast: ['1'], 'Lunch/Dinner': ['4'] }, title: 'Week 1', type: 'Biweekly' }),
+    )
     const store = useMealPlanStore()
     await store.fetch()
     expect(store.currentPlan.Breakfast).toEqual(['1'])
     expect(store.currentPlan['Lunch/Dinner']).toEqual(['4'])
+    expect(store.planTitle).toBe('Week 1')
+    expect(store.planType).toBe('Biweekly')
   })
 
   it('sets error on fetch failure', async () => {
@@ -114,9 +126,11 @@ describe('mealPlanStore', () => {
     expect(ids).toContain('4')
   })
 
-  it('reusePlan calls clonePlan with plan id and sets currentPlan from result', async () => {
-    const activated = { Breakfast: ['9', '1'], 'Lunch/Dinner': ['14', '5'] }
-    vi.mocked(clonePlan).mockResolvedValue(activated)
+  it('reusePlan calls clonePlan with plan id + copy title, sets currentPlan and planTitle', async () => {
+    vi.mocked(clonePlan).mockResolvedValue({
+      recipes: { Breakfast: ['9', '1'], 'Lunch/Dinner': ['14', '5'] },
+      title: 'Old Plan (copy)',
+    })
     const store = useMealPlanStore()
     const plan = {
       id: 'plan-5', title: 'Old Plan', type: 'Weekly' as const,
@@ -124,8 +138,30 @@ describe('mealPlanStore', () => {
       recipes: { Breakfast: ['9', '1'], 'Lunch/Dinner': ['14', '5'] },
     }
     await store.reusePlan(plan)
-    expect(clonePlan).toHaveBeenCalledWith('plan-5')
+    expect(clonePlan).toHaveBeenCalledWith('plan-5', 'Old Plan (copy)')
     expect(store.currentPlan.Breakfast).toEqual(['9', '1'])
     expect(store.currentPlan['Lunch/Dinner']).toEqual(['14', '5'])
+    expect(store.planTitle).toBe('Old Plan (copy)')
+  })
+
+  describe('renameActivePlan', () => {
+    it('updates planTitle and calls updatePlan with new title', async () => {
+      vi.mocked(fetchCurrentPlan).mockResolvedValue(makeFetchResult({ title: 'Original' }))
+      const store = useMealPlanStore()
+      await store.fetch()
+      await store.renameActivePlan('New Name')
+      expect(store.planTitle).toBe('New Name')
+      expect(updatePlan).toHaveBeenCalledWith(store.currentPlan, { title: 'New Name' })
+    })
+
+    it('reverts planTitle and sets renameError on API failure', async () => {
+      vi.mocked(fetchCurrentPlan).mockResolvedValue(makeFetchResult({ title: 'Original' }))
+      vi.mocked(updatePlan).mockRejectedValueOnce(new Error('Network error'))
+      const store = useMealPlanStore()
+      await store.fetch()
+      await store.renameActivePlan('New Name')
+      expect(store.planTitle).toBe('Original')
+      expect(store.renameError).toBe('Failed to save name. Please try again.')
+    })
   })
 })

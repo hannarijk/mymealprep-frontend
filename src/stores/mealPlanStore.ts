@@ -10,8 +10,10 @@ export const useMealPlanStore = defineStore('mealPlan', () => {
 
   const currentPlan = ref<CurrentPlan>({ Breakfast: [], 'Lunch/Dinner': [] })
   const planType = ref<'Weekly' | 'Biweekly'>('Weekly')
+  const planTitle = ref<string>('')
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+  const renameError = ref<string | null>(null)
 
   const breakfastRecipes = computed(() =>
     currentPlan.value.Breakfast.map((id) => recipeStore.recipes.find((r) => r.id === id)).filter(
@@ -38,7 +40,10 @@ export const useMealPlanStore = defineStore('mealPlan', () => {
     isLoading.value = true
     error.value = null
     try {
-      currentPlan.value = await fetchCurrentPlan()
+      const result = await fetchCurrentPlan()
+      currentPlan.value = result.recipes
+      planTitle.value = result.title
+      planType.value = result.type
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to load meal plan'
     } finally {
@@ -68,14 +73,30 @@ export const useMealPlanStore = defineStore('mealPlan', () => {
   }
 
   async function reusePlan(plan: MealPlan) {
-    currentPlan.value = await clonePlan(plan.id)
+    const result = await clonePlan(plan.id, `${plan.title} (copy)`)
+    currentPlan.value = result.recipes
+    planTitle.value = result.title
+  }
+
+  async function renameActivePlan(title: string) {
+    const previous = planTitle.value
+    planTitle.value = title
+    renameError.value = null
+    try {
+      await updatePlan(currentPlan.value, { title })
+    } catch {
+      planTitle.value = previous
+      renameError.value = 'Failed to save name. Please try again.'
+    }
   }
 
   return {
     currentPlan,
     planType,
+    planTitle,
     isLoading,
     error,
+    renameError,
     breakfastRecipes,
     mainRecipes,
     suggestions,
@@ -85,5 +106,6 @@ export const useMealPlanStore = defineStore('mealPlan', () => {
     togglePlanType,
     clearPlan,
     reusePlan,
+    renameActivePlan,
   }
 })
