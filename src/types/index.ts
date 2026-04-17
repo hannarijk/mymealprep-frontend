@@ -44,5 +44,6 @@ export interface MealPlan {
   notes: string
   sourcePlanId: string | null
   active?: boolean
+  createdAt?: string
   recipes?: CurrentPlan
 }
