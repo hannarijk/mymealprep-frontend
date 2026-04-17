@@ -17,7 +17,7 @@ vi.mock('@/api/client', async (importOriginal) => {
 })
 
 import { client } from '@/api/client'
-import { fetchCurrentPlan, updatePlan, clonePlan, fetchPlanHistory } from '@/services/mealPlanService'
+import { fetchCurrentPlan, updatePlan, clonePlan, createPlan, fetchPlanHistory } from '@/services/mealPlanService'
 import type { ApiMealPlan } from '@/api/types'
 
 const makeApiPlan = (overrides: Partial<ApiMealPlan> = {}): ApiMealPlan => ({
@@ -157,6 +157,25 @@ describe('mealPlanService', () => {
       await clonePlan('plan-42')
       await updatePlan({ Breakfast: [], 'Lunch/Dinner': [] })
       expect(client.put).toHaveBeenCalledWith('/meal-plans/plan-42', expect.anything())
+    })
+  })
+
+  describe('createPlan', () => {
+    it('calls POST /meal-plans with title and returns empty recipes, title, type', async () => {
+      vi.mocked(client.post).mockResolvedValue(makeApiPlan({ id: 'new-1', title: 'Week of Apr 14', type: 'Weekly' }))
+      const result = await createPlan('Week of Apr 14')
+      expect(client.post).toHaveBeenCalledWith('/meal-plans', expect.objectContaining({ title: 'Week of Apr 14', recipes: [] }))
+      expect(result.recipes).toEqual({ Breakfast: [], 'Lunch/Dinner': [] })
+      expect(result.title).toBe('Week of Apr 14')
+      expect(result.type).toBe('Weekly')
+    })
+
+    it('updates activePlanId so subsequent updatePlan targets the new plan', async () => {
+      vi.mocked(client.post).mockResolvedValue(makeApiPlan({ id: 'new-99', title: 'Week of Apr 14' }))
+      vi.mocked(client.put).mockResolvedValue(undefined)
+      await createPlan('Week of Apr 14')
+      await updatePlan({ Breakfast: [], 'Lunch/Dinner': [] })
+      expect(client.put).toHaveBeenCalledWith('/meal-plans/new-99', expect.anything())
     })
   })
 

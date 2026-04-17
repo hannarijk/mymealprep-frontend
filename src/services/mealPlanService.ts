@@ -65,6 +65,22 @@ export async function clonePlan(
   return { recipes: mapRecipesToCurrentPlan(plan.recipes), title: plan.title }
 }
 
+export async function createPlan(title: string): Promise<{
+  recipes: CurrentPlan
+  title: string
+  type: 'Weekly' | 'Biweekly'
+}> {
+  const plan = await client.post<ApiMealPlan>('/meal-plans', {
+    title,
+    type: 'Weekly',
+    notes: '',
+    recipes: [],
+  })
+  activePlanId = plan.id
+  activePlanMeta = { title: plan.title, type: plan.type, notes: plan.notes }
+  return { recipes: { Breakfast: [], 'Lunch/Dinner': [] }, title: plan.title, type: plan.type }
+}
+
 export async function fetchPlanHistory(): Promise<MealPlan[]> {
   const data = await client.getAll<ApiMealPlan>('/meal-plans', { limit: 100 })
   return mapMealPlans(data)

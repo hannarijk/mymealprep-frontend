@@ -8,6 +8,7 @@ vi.mock('@/services/mealPlanService', () => ({
   fetchCurrentPlan: vi.fn(),
   updatePlan: vi.fn().mockResolvedValue(undefined),
   clonePlan: vi.fn(),
+  createPlan: vi.fn(),
   fetchPlanHistory: vi.fn(),
 }))
 
@@ -23,7 +24,7 @@ vi.mock('@/services/recipeService', () => ({
   fetchRecipes: vi.fn(),
 }))
 
-import { fetchCurrentPlan, updatePlan, clonePlan } from '@/services/mealPlanService'
+import { fetchCurrentPlan, updatePlan, clonePlan, createPlan as createPlanService } from '@/services/mealPlanService'
 
 const makeRecipe = (id: string): Recipe => ({
   id,
@@ -142,6 +143,32 @@ describe('mealPlanStore', () => {
     expect(store.currentPlan.Breakfast).toEqual(['9', '1'])
     expect(store.currentPlan['Lunch/Dinner']).toEqual(['14', '5'])
     expect(store.planTitle).toBe('Old Plan (copy)')
+  })
+
+  describe('createPlan', () => {
+    it('sets currentPlan, planTitle, planType from service result', async () => {
+      vi.mocked(createPlanService).mockResolvedValue({
+        recipes: { Breakfast: [], 'Lunch/Dinner': [] },
+        title: 'Week of Apr 14',
+        type: 'Weekly',
+      })
+      const store = useMealPlanStore()
+      await store.createPlan('Week of Apr 14')
+      expect(createPlanService).toHaveBeenCalledWith('Week of Apr 14')
+      expect(store.currentPlan).toEqual({ Breakfast: [], 'Lunch/Dinner': [] })
+      expect(store.planTitle).toBe('Week of Apr 14')
+      expect(store.planType).toBe('Weekly')
+    })
+  })
+
+  describe('restorePlan', () => {
+    it('sets currentPlan from snapshot and calls updatePlan', () => {
+      const store = useMealPlanStore()
+      const snapshot = { Breakfast: ['r1'], 'Lunch/Dinner': ['r2'] }
+      store.restorePlan(snapshot)
+      expect(store.currentPlan).toEqual(snapshot)
+      expect(updatePlan).toHaveBeenCalledWith(snapshot)
+    })
   })
 
   describe('renameActivePlan', () => {
