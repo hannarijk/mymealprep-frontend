@@ -2,14 +2,11 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { CalendarRange, BookOpen, ShoppingCart, History, PanelRightOpen, PanelRightClose, LogOut } from 'lucide-vue-next'
-import { useMealPlanStore } from '@/stores/mealPlanStore'
 import { useUIStore } from '@/stores/uiStore'
 import { useAuthStore } from '@/stores/authStore'
-import Pill from '@/components/Pill.vue'
 
 const route = useRoute()
 const router = useRouter()
-const mealPlanStore = useMealPlanStore()
 const uiStore = useUIStore()
 const authStore = useAuthStore()
 
@@ -62,16 +59,6 @@ function logout() {
 
       <!-- Right controls -->
       <div class="flex items-center gap-2">
-        <!-- Plan type toggle -->
-        <button
-          class="rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
-          @click="mealPlanStore.togglePlanType()"
-        >
-          <Pill :tone="mealPlanStore.planType === 'Weekly' ? 'default' : 'purple'">
-            {{ mealPlanStore.planType }}
-          </Pill>
-        </button>
-
         <!-- Suggestions toggle (plan tab only) -->
         <button
           v-if="isOnPlan"
