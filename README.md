@@ -1,4 +1,4 @@
-# MyMealPrep
+# Mealorion
 
 A weekly meal planning app for organizing breakfast and lunch/dinner recipes, generating grocery lists, and tracking meal history.
 

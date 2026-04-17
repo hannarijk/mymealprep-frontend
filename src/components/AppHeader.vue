@@ -36,7 +36,7 @@ function logout() {
         <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900">
           <span class="text-xs font-bold text-white">M</span>
         </div>
-        <span class="font-semibold text-slate-900">MyMealPrep</span>
+        <span class="font-semibold text-slate-900">Mealorion</span>
       </div>
 
       <!-- Nav tabs -->
