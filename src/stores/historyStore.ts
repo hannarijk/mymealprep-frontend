@@ -42,6 +42,14 @@ export const useHistoryStore = defineStore('history', () => {
     historyPage.value = Math.min(totalHistoryPages.value, historyPage.value + 1)
   }
 
+  function removeFromHistory(planId: string) {
+    history.value = history.value.filter((p) => p.id !== planId)
+  }
+
+  function restoreToHistory(plan: MealPlan) {
+    history.value = [plan, ...history.value]
+  }
+
   async function reusePlan(plan: MealPlan) {
     const mealPlanStore = useMealPlanStore()
     await mealPlanStore.reusePlan(plan)
@@ -58,5 +66,7 @@ export const useHistoryStore = defineStore('history', () => {
     prevPage,
     nextPage,
     reusePlan,
+    removeFromHistory,
+    restoreToHistory,
   }
 })

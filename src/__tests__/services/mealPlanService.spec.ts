@@ -17,7 +17,7 @@ vi.mock('@/api/client', async (importOriginal) => {
 })
 
 import { client } from '@/api/client'
-import { fetchCurrentPlan, updatePlan, clonePlan, createPlan, fetchPlanHistory } from '@/services/mealPlanService'
+import { fetchCurrentPlan, updatePlan, clonePlan, createPlan, deletePlan, fetchPlanHistory } from '@/services/mealPlanService'
 import type { ApiMealPlan } from '@/api/types'
 
 const makeApiPlan = (overrides: Partial<ApiMealPlan> = {}): ApiMealPlan => ({
@@ -176,6 +176,14 @@ describe('mealPlanService', () => {
       await createPlan('Week of Apr 14')
       await updatePlan({ Breakfast: [], 'Lunch/Dinner': [] })
       expect(client.put).toHaveBeenCalledWith('/meal-plans/new-99', expect.anything())
+    })
+  })
+
+  describe('deletePlan', () => {
+    it('calls DELETE /meal-plans/:id', async () => {
+      vi.mocked(client.delete).mockResolvedValue(undefined)
+      await deletePlan('plan-99')
+      expect(client.delete).toHaveBeenCalledWith('/meal-plans/plan-99')
     })
   })
 

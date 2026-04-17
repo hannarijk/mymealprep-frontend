@@ -81,6 +81,10 @@ export async function createPlan(title: string): Promise<{
   return { recipes: { Breakfast: [], 'Lunch/Dinner': [] }, title: plan.title, type: plan.type }
 }
 
+export async function deletePlan(planId: string): Promise<void> {
+  await client.delete(`/meal-plans/${planId}`)
+}
+
 export async function fetchPlanHistory(): Promise<MealPlan[]> {
   const data = await client.getAll<ApiMealPlan>('/meal-plans', { limit: 100 })
   return mapMealPlans(data)

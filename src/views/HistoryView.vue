@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { RotateCcw } from 'lucide-vue-next'
+import { RotateCcw, Trash2 } from 'lucide-vue-next'
 import { useHistoryStore } from '@/stores/historyStore'
+import { deletePlan as deletePlanService } from '@/services/mealPlanService'
 import Pagination from '@/components/Pagination.vue'
 import Pill from '@/components/Pill.vue'
+import type { MealPlan } from '@/types'
 
 const router = useRouter()
 const historyStore = useHistoryStore()
@@ -15,9 +17,48 @@ async function handleReuse(plan: (typeof historyStore.pagedHistory)[number]) {
   historyStore.reusePlan(plan)
   await router.push('/plan')
 }
+
+// ── Deferred delete with undo ──────────────────────────────────────────────
+const pendingDelete = ref<MealPlan | null>(null)
+const showDeleteToast = ref(false)
+let deleteTimer: ReturnType<typeof setTimeout> | null = null
+
+function commitPendingDelete() {
+  if (!pendingDelete.value) return
+  deletePlanService(pendingDelete.value.id).catch(() => {})
+  pendingDelete.value = null
+}
+
+function handleDelete(plan: MealPlan) {
+  if (pendingDelete.value) commitPendingDelete()
+  historyStore.removeFromHistory(plan.id)
+  pendingDelete.value = plan
+  showDeleteToast.value = true
+  if (deleteTimer) clearTimeout(deleteTimer)
+  deleteTimer = setTimeout(dismissDeleteToast, 5000)
+}
+
+function handleUndoDelete() {
+  if (!pendingDelete.value) return
+  historyStore.restoreToHistory(pendingDelete.value)
+  if (deleteTimer) { clearTimeout(deleteTimer); deleteTimer = null }
+  pendingDelete.value = null
+  showDeleteToast.value = false
+}
+
+function dismissDeleteToast() {
+  commitPendingDelete()
+  showDeleteToast.value = false
+  deleteTimer = null
+}
+
+onUnmounted(() => {
+  if (deleteTimer) commitPendingDelete()
+})
 </script>
 
 <template>
+  <div>
   <div class="p-5">
     <div class="mb-5">
       <h2 class="text-lg font-bold tracking-tight text-slate-900">Plan History</h2>
@@ -39,7 +80,7 @@ async function handleReuse(plan: (typeof historyStore.pagedHistory)[number]) {
       <div
         v-for="plan in historyStore.pagedHistory"
         :key="plan.id"
-        class="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        class="group rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
       >
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div class="min-w-0">
@@ -59,7 +100,7 @@ async function handleReuse(plan: (typeof historyStore.pagedHistory)[number]) {
               "{{ plan.notes }}"
             </p>
           </div>
-          <div class="flex shrink-0 gap-2">
+          <div class="flex shrink-0 items-center gap-3">
             <button
               v-if="!plan.active"
               class="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
@@ -70,6 +111,14 @@ async function handleReuse(plan: (typeof historyStore.pagedHistory)[number]) {
             <span v-else class="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">
               Active plan
             </span>
+            <button
+              v-if="!plan.active"
+              class="shrink-0 rounded-lg p-1.5 text-slate-300 transition hover:bg-rose-50 hover:text-rose-500"
+              aria-label="Delete plan"
+              @click="handleDelete(plan)"
+            >
+              <Trash2 class="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>
@@ -84,4 +133,34 @@ async function handleReuse(plan: (typeof historyStore.pagedHistory)[number]) {
       />
     </div>
   </div>
+
+  <Teleport to="body">
+    <Transition name="toast">
+      <div
+        v-if="showDeleteToast"
+        class="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-2xl bg-slate-900 px-4 py-3 text-sm text-white shadow-lg"
+      >
+        <span>Plan deleted</span>
+        <button
+          class="font-semibold text-emerald-400 transition hover:text-emerald-300"
+          @click="handleUndoDelete"
+        >
+          Undo
+        </button>
+      </div>
+    </Transition>
+  </Teleport>
+  </div>
 </template>
+
+<style scoped>
+.toast-enter-active,
+.toast-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(12px);
+}
+</style>

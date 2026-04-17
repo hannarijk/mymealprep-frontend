@@ -94,6 +94,21 @@ describe('historyStore', () => {
     expect(store.historyPage).toBe(1)
   })
 
+  it('removeFromHistory removes the correct plan', () => {
+    const store = useHistoryStore()
+    store.history = [makePlan('1'), makePlan('2'), makePlan('3')]
+    store.removeFromHistory('2')
+    expect(store.history.map((p) => p.id)).toEqual(['1', '3'])
+  })
+
+  it('restoreToHistory prepends the plan back', () => {
+    const store = useHistoryStore()
+    store.history = [makePlan('1'), makePlan('3')]
+    store.restoreToHistory(makePlan('2'))
+    expect(store.history[0]?.id).toBe('2')
+    expect(store.history).toHaveLength(3)
+  })
+
   it('reusePlan calls clonePlan with copy title and updates mealPlanStore', async () => {
     vi.mocked(clonePlan).mockResolvedValue({
       recipes: { Breakfast: ['5'], 'Lunch/Dinner': ['15'] },
