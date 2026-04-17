@@ -22,7 +22,7 @@ export const useHistoryStore = defineStore('history', () => {
   )
 
   async function fetch() {
-    if (isLoading.value || history.value.length > 0) return
+    if (isLoading.value) return
     isLoading.value = true
     error.value = null
     try {

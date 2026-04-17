@@ -41,12 +41,12 @@ describe('historyStore', () => {
     expect(store.history).toHaveLength(3)
   })
 
-  it('fetch is a no-op when history already loaded', async () => {
+  it('fetch refetches on every call to always show fresh data', async () => {
     vi.mocked(fetchPlanHistory).mockResolvedValue([makePlan('1')])
     const store = useHistoryStore()
     await store.fetch()
     await store.fetch()
-    expect(fetchPlanHistory).toHaveBeenCalledTimes(1)
+    expect(fetchPlanHistory).toHaveBeenCalledTimes(2)
   })
 
   it('sets error on fetch failure', async () => {
